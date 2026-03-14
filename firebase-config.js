@@ -7,5 +7,5 @@ window.FALLON_FIREBASE_CONFIG = {
   messagingSenderId: "612118976397",
   appId: "1:612118976397:web:f83395c227bd47ca0b8fc4",
   trackerPath: "fallonSafetyKleenTurnaroundTracker/sharedState",
-  ownerEmail: ""
+  ownerEmail: "jiffysmith2@gmail.com"
 };
