@@ -437,7 +437,7 @@
         <button id="renameUnitBtn" class="secondary admin-only hidden-admin" style="width:auto;">Rename Unit</button>
       </div>
       <div class="unit-note">
-        Use the drop-down to switch between units. Each unit keeps its own rows, progress, and print lists inside the same app.
+        Use the drop-down to switch between units. Each unit keeps its own rows, progress, and print lists inside the same app. SEQ, PESCO, and HT are preloaded from your spreadsheets.
       </div>
       <div class="controls">
         <input class="wide" id="searchInput" type="text" placeholder="Search equipment, size, torque, or deck..." />
@@ -501,7 +501,7 @@
             To share updates with everyone, paste your Firebase web config into the Firebase config section near the bottom of this file, or into firebase-config.js in the deploy package, then redeploy to Vercel.
           </div>
           <div class="mini" style="margin-top:10px;">
-            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, checkmarks, added units, and edits for everyone using the same site.
+            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, checkmarks, added units, and edits for everyone using the same site. This version preloads SEQ, PESCO, and HT.
           </div>
         </div>
       </div>
@@ -1800,7 +1800,587 @@
     const DEFAULT_ADMIN_PIN = "1234";
     const DEFAULT_UNIT_NAME = "SEQ";
     const defaultUnits = {
-      [DEFAULT_UNIT_NAME]: normalizeSeed(originalData)
+      [DEFAULT_UNIT_NAME]: normalizeSeed(originalData),
+      "PESCO": normalizeSeed([
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "R-5",
+            "flangeAmount": 1,
+            "flangeSize": "4\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "R-5",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "R-6",
+            "flangeAmount": 3,
+            "flangeSize": "1 1/2\"150",
+            "torque": "45lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "R-6",
+            "flangeAmount": 1,
+            "flangeSize": "1\"150",
+            "torque": "45lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "R-6 Man-Door",
+            "flangeAmount": 1,
+            "flangeSize": "4\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "P-3 to WFE-1 gate valve",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "P-3 Suction Expansion Joint",
+            "flangeAmount": 2,
+            "flangeSize": "8\"150",
+            "torque": "150lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "P-411",
+            "flangeAmount": 2,
+            "flangeSize": "1 1/2\" 150",
+            "torque": "45lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "R-100 Man-Door",
+            "flangeAmount": 1,
+            "flangeSize": "14\"150",
+            "torque": "350lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_ground",
+            "deck": "Front End Ground",
+            "equipment": "Off Gass Line",
+            "flangeAmount": 6,
+            "flangeSize": "3\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_1st_deck",
+            "deck": "Front End 1st Deck",
+            "equipment": "Flash Tank Man-Door",
+            "flangeAmount": 1,
+            "flangeSize": "24\"150",
+            "torque": "500lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_1st_deck",
+            "deck": "Front End 1st Deck",
+            "equipment": "R-100 Gate Valve",
+            "flangeAmount": 2,
+            "flangeSize": "3\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_2nd_deck",
+            "deck": "Front End 2nd Deck",
+            "equipment": "N/A",
+            "flangeAmount": "N/A",
+            "flangeSize": "N/A",
+            "torque": "N/A"
+      },
+      {
+            "deck_sheet": "front_end_3rd_deck",
+            "deck": "Front End 3rd Deck",
+            "equipment": "HE-3 Lower Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "1025lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_3rd_deck",
+            "deck": "Front End 3rd Deck",
+            "equipment": "HE-3 Floating Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_3rd_deck",
+            "deck": "Front End 3rd Deck",
+            "equipment": "HE-1 Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "370lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_4th_deck",
+            "deck": "Front End 4th Deck",
+            "equipment": "HE-3 Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "325lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_4th_deck",
+            "deck": "Front End 4th Deck",
+            "equipment": "HE-3 to C-1 Cross over",
+            "flangeAmount": 1,
+            "flangeSize": "12\"150",
+            "torque": "240lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_4th_deck",
+            "deck": "Front End 4th Deck",
+            "equipment": "HE-3 cw",
+            "flangeAmount": 2,
+            "flangeSize": "6\"150",
+            "torque": "150lb-ft"
+      },
+      {
+            "deck_sheet": "front_end_4th_deck",
+            "deck": "Front End 4th Deck",
+            "equipment": "C-1 Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "142lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-201 Drop-Out",
+            "flangeAmount": 3,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-301 Drop-Out",
+            "flangeAmount": 3,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-210 Mandoor",
+            "flangeAmount": 1,
+            "flangeSize": "12\"150",
+            "torque": "240lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-210",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-310 Mandoor",
+            "flangeAmount": 1,
+            "flangeSize": "8\"150",
+            "torque": "150lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-310",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-402 Mandoor",
+            "flangeAmount": 1,
+            "flangeSize": "12\"150",
+            "torque": "240lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-420 Mandoor",
+            "flangeAmount": 1,
+            "flangeSize": "12\"150",
+            "torque": "240lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-201",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-201",
+            "flangeAmount": 2,
+            "flangeSize": "4\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-301",
+            "flangeAmount": 3,
+            "flangeSize": "3\"300",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-206 Mandoor",
+            "flangeAmount": 1,
+            "flangeSize": "12\"150",
+            "torque": "240lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-206",
+            "flangeAmount": 1,
+            "flangeSize": "3\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-206 Drop-Out",
+            "flangeAmount": 1,
+            "flangeSize": "4\"150",
+            "torque": "150lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-306 Mandoor",
+            "flangeAmount": 1,
+            "flangeSize": "8\"150",
+            "torque": "150lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-306",
+            "flangeAmount": 1,
+            "flangeSize": "4\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "R-306",
+            "flangeAmount": 3,
+            "flangeSize": "3\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P-201",
+            "flangeAmount": 6,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P-201 Check Valve",
+            "flangeAmount": 2,
+            "flangeSize": "1\"150",
+            "torque": "45lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P-206",
+            "flangeAmount": 4,
+            "flangeSize": "3\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P-206 Check Valve",
+            "flangeAmount": 4,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P301",
+            "flangeAmount": 5,
+            "flangeSize": "1 1/2 150",
+            "torque": "45lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P-306",
+            "flangeAmount": 4,
+            "flangeSize": "3\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "P-306 check valve",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_1",
+            "deck": "WFE 1",
+            "equipment": "WFE-1 Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "250lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_1",
+            "deck": "WFE 1",
+            "equipment": "WFE-1 Head",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_1",
+            "deck": "WFE 1",
+            "equipment": "WFE-1 Top Floating Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "74lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_1",
+            "deck": "WFE 1",
+            "equipment": "WFE-1 Bottom Floating Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "74lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_1",
+            "deck": "WFE 1",
+            "equipment": "WFE-1 Condenser",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "250lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_1",
+            "deck": "WFE 1",
+            "equipment": "WFE-1 Condenser CW",
+            "flangeAmount": 2,
+            "flangeSize": "4\"300",
+            "torque": "150lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_2",
+            "deck": "WFE 2",
+            "equipment": "WFE-2 Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "200lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_2",
+            "deck": "WFE 2",
+            "equipment": "WFE-2 Head Expansion Joint",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_2",
+            "deck": "WFE 2",
+            "equipment": "WFE-2 Top Floating Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "50lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_2",
+            "deck": "WFE 2",
+            "equipment": "WFE-2 Bottom Floating Head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "50lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_2",
+            "deck": "WFE 2",
+            "equipment": "WFE-2 Condenser",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "200lb-ft"
+      },
+      {
+            "deck_sheet": "wfe_2",
+            "deck": "WFE 2",
+            "equipment": "WFE-2 Condenser CW",
+            "flangeAmount": 2,
+            "flangeSize": "2\"300",
+            "torque": "90lb-ft"
+      },
+      {
+            "deck_sheet": "back_end_scaffold",
+            "deck": "Back End Scaffold",
+            "equipment": "HE-210 Expansion Joints",
+            "flangeAmount": 2,
+            "flangeSize": "20\"150",
+            "torque": "500lb-ft"
+      },
+      {
+            "deck_sheet": "back_end_scaffold",
+            "deck": "Back End Scaffold",
+            "equipment": "HE-310 Expansion Joints",
+            "flangeAmount": 2,
+            "flangeSize": "12\"150",
+            "torque": "240lb-ft"
+      }
+]),
+      "HT": normalizeSeed([
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "hx21",
+            "flangeAmount": 4,
+            "flangeSize": "20\"900 r74 rtj",
+            "torque": "3000lbs"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "hx21",
+            "flangeAmount": 2,
+            "flangeSize": "2x1500 3\"r24",
+            "torque": "240lbs"
+      },
+      {
+            "deck_sheet": "ground",
+            "deck": "Ground",
+            "equipment": "hx21",
+            "flangeAmount": 4,
+            "flangeSize": "2 1500",
+            "torque": "200lbs"
+      },
+      {
+            "deck_sheet": "1st_deck",
+            "deck": "1st Deck",
+            "equipment": "d23 head",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "200lbs"
+      },
+      {
+            "deck_sheet": "1st_deck",
+            "deck": "1st Deck",
+            "equipment": "d23",
+            "flangeAmount": 2,
+            "flangeSize": "1 1/2 600 r20",
+            "torque": "150lbs"
+      },
+      {
+            "deck_sheet": "1st_deck",
+            "deck": "1st Deck",
+            "equipment": "d23",
+            "flangeAmount": 1,
+            "flangeSize": "2 1500",
+            "torque": "240lbs"
+      },
+      {
+            "deck_sheet": "1st_deck",
+            "deck": "1st Deck",
+            "equipment": "d24 man door",
+            "flangeAmount": 1,
+            "flangeSize": "12\"150",
+            "torque": "240lbs"
+      },
+      {
+            "deck_sheet": "2nd_deck",
+            "deck": "2nd Deck",
+            "equipment": "d01",
+            "flangeAmount": 1,
+            "flangeSize": "18\"150",
+            "torque": "500lbs"
+      },
+      {
+            "deck_sheet": "2nd_deck",
+            "deck": "2nd Deck",
+            "equipment": "d21",
+            "flangeAmount": 1,
+            "flangeSize": "18\"900 r70",
+            "torque": "650lbs"
+      },
+      {
+            "deck_sheet": "2nd_deck",
+            "deck": "2nd Deck",
+            "equipment": "d21",
+            "flangeAmount": 5,
+            "flangeSize": "4\"900 r37",
+            "torque": "500lbs"
+      },
+      {
+            "deck_sheet": "2nd_deck",
+            "deck": "2nd Deck",
+            "equipment": "d21",
+            "flangeAmount": 2,
+            "flangeSize": "3\"900 r31",
+            "torque": "240lbs"
+      },
+      {
+            "deck_sheet": "3rd_deck",
+            "deck": "3rd Deck",
+            "equipment": "hx27",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "480lb"
+      },
+      {
+            "deck_sheet": "3rd_deck",
+            "deck": "3rd Deck",
+            "equipment": "hx27",
+            "flangeAmount": 2,
+            "flangeSize": "2\"150",
+            "torque": "90lbs"
+      },
+      {
+            "deck_sheet": "3rd_deck",
+            "deck": "3rd Deck",
+            "equipment": "c22",
+            "flangeAmount": 1,
+            "flangeSize": "Special",
+            "torque": "400lbs"
+      }
+])
     };
     const FIREBASE_CONFIG = window.FALLON_FIREBASE_CONFIG;
     const DEFAULT_TRACKER_PATH = "fallonSafetyKleenTurnaroundTracker/sharedState";
@@ -1957,7 +2537,27 @@
     }
 
     function getDefaultRowsForUnit(unitName) {
-      return unitName === DEFAULT_UNIT_NAME ? normalizeSeed(originalData) : [];
+      return defaultUnits[unitName] ? normalizeSeed(defaultUnits[unitName]) : [];
+    }
+
+    function mergeUnitsWithDefaults(sourceUnits) {
+      const merged = {};
+      for (const [unitName, rows] of Object.entries(defaultUnits)) {
+        merged[unitName] = normalizeSeed(rows);
+      }
+      if (sourceUnits && typeof sourceUnits === "object") {
+        for (const [unitName, rows] of Object.entries(sourceUnits)) {
+          const cleanName = sanitizeUnitName(unitName);
+          if (!cleanName) continue;
+          merged[cleanName] = normalizeSeed(Array.isArray(rows) ? rows : []);
+        }
+      }
+      return merged;
+    }
+
+    function hasMissingDefaultUnits(sourceUnits) {
+      const cleanSourceNames = new Set(Object.keys(sourceUnits || {}).map(name => sanitizeUnitName(name)));
+      return Object.keys(defaultUnits).some(unitName => !cleanSourceNames.has(unitName));
     }
 
     function migrateLegacyRowsIfNeeded() {
@@ -1979,20 +2579,14 @@
       try {
         const saved = JSON.parse(localStorage.getItem(UNITS_STORAGE_KEY) || 'null');
         if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
-          const normalizedUnits = {};
-          for (const [unitName, rows] of Object.entries(saved)) {
-            const cleanName = sanitizeUnitName(unitName);
-            if (!cleanName) continue;
-            normalizedUnits[cleanName] = normalizeSeed(Array.isArray(rows) ? rows : []);
-          }
-          if (Object.keys(normalizedUnits).length) return normalizedUnits;
+          return mergeUnitsWithDefaults(saved);
         }
       } catch (error) {
         console.warn('Could not load saved unit data', error);
       }
       const migrated = migrateLegacyRowsIfNeeded();
-      if (migrated) return migrated;
-      return Object.fromEntries(Object.entries(defaultUnits).map(([name, rows]) => [name, normalizeSeed(rows)]));
+      if (migrated) return mergeUnitsWithDefaults(migrated);
+      return mergeUnitsWithDefaults(defaultUnits);
     }
 
     function saveUnitsLocal(statusMessage = `Saved locally on this device • ${stampNow()}`) {
@@ -2072,7 +2666,7 @@
     }
 
     function applyRemoteState(payload) {
-      const importedUnits = normalizeImportedUnits(payload?.units);
+      const importedUnits = mergeUnitsWithDefaults(normalizeImportedUnits(payload?.units));
       if (!Object.keys(importedUnits).length) return;
       app.cloud.applyingRemote = true;
       app.units = importedUnits;
@@ -2110,7 +2704,12 @@
 
         const firstSnap = await get(dataRef);
         if (firstSnap.exists() && firstSnap.val()) {
-          applyRemoteState(firstSnap.val());
+          const remotePayload = firstSnap.val();
+          applyRemoteState(remotePayload);
+          if (hasMissingDefaultUnits(remotePayload.units)) {
+            await set(dataRef, buildCloudPayload());
+            setSaveStatus(`Added uploaded units to shared cloud • ${stampNow()}`);
+          }
         } else {
           await set(dataRef, buildCloudPayload());
           setSaveStatus(`Seeded shared cloud data • ${stampNow()}`);
