@@ -404,6 +404,7 @@
         </div>
         <div class="status-line">
           <span id="saveStatus">Saved locally on this device</span>
+          <span id="cloudModeStatus">Cloud sync: local-only mode</span>
           <span id="installStatus">Installable on supported phones/tablets/browsers</span>
         </div>
         <div class="admin-bar">
@@ -493,6 +494,16 @@
         <div class="sub">
           Export creates a JSON backup of all units, including checkmarks and edits. Import restores a full app backup or a single unit array. Reset returns only the active unit to its original spreadsheet data. The admin PIN is stored on this device/browser.
         </div>
+        <div class="card" style="margin-top:14px; padding:14px;">
+          <h2 style="margin-bottom:8px;">Shared Cloud Sync</h2>
+          <div class="pill" id="cloudSyncBadge">Local-only mode</div>
+          <div class="sub" id="cloudSyncHelp" style="margin-top:10px;">
+            To share updates with everyone, paste your Firebase web config into the Firebase config section near the bottom of this file, or into firebase-config.js in the deploy package, then redeploy to Vercel.
+          </div>
+          <div class="mini" style="margin-top:10px;">
+            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, checkmarks, added units, and edits for everyone using the same site.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -549,6 +560,25 @@
       </div>
     </form>
   </dialog>
+
+  <script src="./firebase-config.js"></script>
+
+  <script>
+    // Firebase config for shared live sync.
+    // Leave as null to keep local-only mode.
+    // To enable shared updates, replace null with your Firebase config object, for example:
+    // window.FALLON_FIREBASE_CONFIG = {
+    //   apiKey: "your-api-key",
+    //   authDomain: "your-project.firebaseapp.com",
+    //   databaseURL: "https://your-project-default-rtdb.firebaseio.com",
+    //   projectId: "your-project",
+    //   storageBucket: "your-project.firebasestorage.app",
+    //   messagingSenderId: "1234567890",
+    //   appId: "1:1234567890:web:abcdef123456",
+    //   trackerPath: "fallonSafetyKleenTurnaroundTracker/sharedState"
+    // };
+    window.FALLON_FIREBASE_CONFIG = window.FALLON_FIREBASE_CONFIG || null;
+  </script>
 
   <script>
     const originalData = [
@@ -1772,14 +1802,43 @@
     const defaultUnits = {
       [DEFAULT_UNIT_NAME]: normalizeSeed(originalData)
     };
+    const FIREBASE_CONFIG = window.FALLON_FIREBASE_CONFIG;
+    const DEFAULT_TRACKER_PATH = "fallonSafetyKleenTurnaroundTracker/sharedState";
     const app = {
       rows: [],
       filteredRows: [],
       units: {},
       currentUnit: DEFAULT_UNIT_NAME,
       deferredPrompt: null,
-      isAdmin: false
+      isAdmin: false,
+      cloud: {
+        configured: Boolean(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL),
+        enabled: false,
+        ready: false,
+        applyingRemote: false,
+        dataRef: null,
+        setFn: null,
+        saveTimer: null
+      }
     };
+
+    function stampNow() {
+      const ts = new Date();
+      return `${ts.toLocaleDateString()} ${ts.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    function setSaveStatus(message) {
+      document.getElementById("saveStatus").textContent = message;
+    }
+
+    function updateCloudStatus(title, help = "") {
+      const line = document.getElementById("cloudModeStatus");
+      const badge = document.getElementById("cloudSyncBadge");
+      const helpEl = document.getElementById("cloudSyncHelp");
+      if (line) line.textContent = `Cloud sync: ${title}`;
+      if (badge) badge.textContent = title;
+      if (help && helpEl) helpEl.textContent = help;
+    }
 
     function getStoredAdminPin() {
       return localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
@@ -1936,11 +1995,43 @@
       return Object.fromEntries(Object.entries(defaultUnits).map(([name, rows]) => [name, normalizeSeed(rows)]));
     }
 
-    function saveUnits() {
+    function saveUnitsLocal(statusMessage = `Saved locally on this device • ${stampNow()}`) {
       localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify(app.units));
       localStorage.setItem(CURRENT_UNIT_KEY, app.currentUnit);
-      const ts = new Date();
-      document.getElementById("saveStatus").textContent = `Saved locally on this device • ${ts.toLocaleDateString()} ${ts.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      setSaveStatus(statusMessage);
+    }
+
+    function buildCloudPayload() {
+      return {
+        units: app.units,
+        updatedAt: new Date().toISOString(),
+        updatedBy: "shared-web-app"
+      };
+    }
+
+    async function pushCloudStateNow() {
+      if (!app.cloud.enabled || !app.cloud.ready || app.cloud.applyingRemote || !app.cloud.dataRef || !app.cloud.setFn) return;
+      try {
+        await app.cloud.setFn(app.cloud.dataRef, buildCloudPayload());
+        setSaveStatus(`Synced to shared cloud • ${stampNow()}`);
+      } catch (error) {
+        console.warn("Cloud sync write failed", error);
+        updateCloudStatus("cloud write failed", "Using local-only saves until the Firebase connection works again.");
+        setSaveStatus(`Saved locally only • ${stampNow()}`);
+      }
+    }
+
+    function queueCloudSave() {
+      if (!app.cloud.enabled || !app.cloud.ready || app.cloud.applyingRemote) return;
+      clearTimeout(app.cloud.saveTimer);
+      app.cloud.saveTimer = setTimeout(() => {
+        pushCloudStateNow();
+      }, 350);
+    }
+
+    function saveUnits() {
+      saveUnitsLocal();
+      queueCloudSave();
     }
 
     function setCurrentUnit(unitName) {
@@ -1966,6 +2057,78 @@
       document.getElementById('appTitleUnit').textContent = app.currentUnit;
       document.title = `Fallon Safety-Kleen Turnaround Tracker Pro – ${app.currentUnit}`;
       document.getElementById('printHeading').textContent = `Fallon Safety-Kleen Turnaround Tracker Pro – ${app.currentUnit} Work List`;
+    }
+
+
+    function normalizeImportedUnits(source) {
+      const normalizedUnits = {};
+      if (!source || typeof source !== "object") return normalizedUnits;
+      for (const [unitName, rows] of Object.entries(source)) {
+        const cleanName = sanitizeUnitName(unitName);
+        if (!cleanName) continue;
+        normalizedUnits[cleanName] = normalizeSeed(Array.isArray(rows) ? rows : []);
+      }
+      return normalizedUnits;
+    }
+
+    function applyRemoteState(payload) {
+      const importedUnits = normalizeImportedUnits(payload?.units);
+      if (!Object.keys(importedUnits).length) return;
+      app.cloud.applyingRemote = true;
+      app.units = importedUnits;
+      if (!app.units[app.currentUnit]) {
+        app.currentUnit = getUnitNames()[0] || DEFAULT_UNIT_NAME;
+      }
+      app.rows = app.units[app.currentUnit] || [];
+      saveUnitsLocal(`Synced from shared cloud • ${stampNow()}`);
+      updateUnitUi();
+      fillFilters();
+      applyFilters();
+      app.cloud.applyingRemote = false;
+    }
+
+    async function initFirebaseSync() {
+      if (!app.cloud.configured) {
+        updateCloudStatus("local-only mode", "To share updates with everyone, paste your Firebase web config into the Firebase config block, then redeploy.");
+        return;
+      }
+      updateCloudStatus("connecting…", "Trying to connect to Firebase Realtime Database.");
+      try {
+        const [{ initializeApp }, { getDatabase, ref, get, set, onValue }] = await Promise.all([
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js")
+        ]);
+
+        const firebaseApp = initializeApp(FIREBASE_CONFIG);
+        const db = getDatabase(firebaseApp, FIREBASE_CONFIG.databaseURL);
+        const path = FIREBASE_CONFIG.trackerPath || DEFAULT_TRACKER_PATH;
+        const dataRef = ref(db, path);
+
+        app.cloud.enabled = true;
+        app.cloud.dataRef = dataRef;
+        app.cloud.setFn = set;
+
+        const firstSnap = await get(dataRef);
+        if (firstSnap.exists() && firstSnap.val()) {
+          applyRemoteState(firstSnap.val());
+        } else {
+          await set(dataRef, buildCloudPayload());
+          setSaveStatus(`Seeded shared cloud data • ${stampNow()}`);
+        }
+
+        onValue(dataRef, snapshot => {
+          const payload = snapshot.val();
+          if (!payload) return;
+          applyRemoteState(payload);
+        });
+
+        app.cloud.ready = true;
+        updateCloudStatus("live for everyone", "Any user opening this same deployed site will see shared updates, units, and checkmarks.");
+      } catch (error) {
+        console.warn("Firebase sync setup failed", error);
+        updateCloudStatus("setup failed", "Cloud sync is off. Check your Firebase config values, especially databaseURL.");
+        setSaveStatus(`Saved locally only • ${stampNow()}`);
+      }
     }
 
     function addUnit() {
@@ -2375,7 +2538,7 @@
       }
     }
 
-    function init() {
+    async function init() {
       loadAdminSession();
       app.rows = loadRows();
       updateUnitUi();
@@ -2384,6 +2547,7 @@
       updateAdminUi();
       applyFilters();
       registerServiceWorker();
+      await initFirebaseSync();
     }
 
     init();
