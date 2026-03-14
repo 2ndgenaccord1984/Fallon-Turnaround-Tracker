@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fallon Safety-Kleen Turnaround Tracker Pro</title>
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="SEQ flange work tracker with completion, editing, printing, and offline install support." />
+  
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg2: #111827;
+      --panel: rgba(17,24,39,0.96);
+      --panel2: #1f2937;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --line: #334155;
+      --accent: #22c55e;
+      --accent2: #38bdf8;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --shadow: 0 20px 45px rgba(0,0,0,0.28);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #0b1120, #111827 40%, #0f172a);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      line-height: 1.15;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+    .sub {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+    }
+    .stat {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 6px;
+    }
+    .stat .value {
+      font-size: 26px;
+      font-weight: 700;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 2fr repeat(4,1fr) auto auto auto;
+      gap: 10px;
+      margin-bottom: 16px;
+      align-items: stretch;
+    }
+    input, select, button, textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #0b1220;
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(135deg, #16a34a, #0891b2);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    button.secondary {
+      background: #1e293b;
+      border: 1px solid var(--line);
+    }
+    button.warn {
+      background: linear-gradient(135deg, #d97706, #ea580c);
+    }
+    button.danger {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+
+    .admin-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #0b1220;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .unit-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .unit-bar .label-chip {
+      width: auto;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #0b1220;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .unit-bar select {
+      min-width: 220px;
+      width: auto;
+      flex: 1 1 260px;
+    }
+    .unit-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .hidden-admin {
+      display: none !important;
+    }
+    .toolbar-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(15,23,42,.9);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1280px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #162033;
+      color: #cbd5e1;
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding: 14px 10px;
+      border-bottom: 1px solid var(--line);
+      z-index: 1;
+    }
+    tbody td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(51,65,85,.6);
+      vertical-align: top;
+    }
+    tbody tr:hover {
+      background: rgba(30,41,59,.7);
+    }
+    .complete-row {
+      background: rgba(34,197,94,.08);
+    }
+    .complete-row td {
+      color: #d1fae5;
+    }
+    .complete-badge, .deck-pill {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .complete-badge {
+      background: rgba(34,197,94,.15);
+      color: #86efac;
+      border-color: rgba(34,197,94,.25);
+    }
+    .pending-badge {
+      background: rgba(245,158,11,.15);
+      color: #fcd34d;
+      border-color: rgba(245,158,11,.25);
+    }
+    .deck-pill {
+      background: rgba(56,189,248,.15);
+      color: #7dd3fc;
+      border-color: rgba(56,189,248,.28);
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .actions button {
+      min-width: 72px;
+      padding: 9px 10px;
+      font-size: 13px;
+    }
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1.25fr .95fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .deck-print-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+      gap: 10px;
+    }
+    .deck-card {
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .deck-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .deck-card p {
+      margin: 4px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #0f172a;
+      color: var(--text);
+      width: min(760px, calc(100vw - 24px));
+      padding: 0;
+      box-shadow: var(--shadow);
+    }
+    dialog::backdrop {
+      background: rgba(2,6,23,.72);
+    }
+    .modal-head, .modal-body, .modal-foot {
+      padding: 18px;
+    }
+    .modal-head {
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .modal-foot {
+      border-top: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .mini {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .mobile-actions {
+      display: none;
+    }
+    .status-line {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 1100px) {
+      .hero, .section-grid {
+        grid-template-columns: 1fr;
+      }
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+      .controls .wide {
+        grid-column: 1 / -1;
+      }
+      .controls button {
+        min-width: 0;
+      }
+    }
+    @media (max-width: 700px) {
+      .wrap { padding: 12px; }
+      h1 { font-size: 24px; }
+      .stats, .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .controls {
+        grid-template-columns: 1fr;
+      }
+      .mobile-actions {
+        display: block;
+      }
+      table {
+        min-width: 1040px;
+      }
+    }
+    @media print {
+      body {
+        background: white;
+        color: black;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .wrap {
+        max-width: none;
+        padding: 0;
+      }
+      .card, .table-wrap {
+        box-shadow: none;
+        border-color: #cbd5e1;
+        background: white;
+      }
+      .print-title {
+        display: block !important;
+        margin: 0 0 10px;
+      }
+      thead th {
+        position: static;
+        background: #e2e8f0;
+        color: black;
+      }
+      tbody tr {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero no-print">
+      <div class="card">
+        <h1>Fallon Safety-Kleen Turnaround Tracker Pro – <span id="appTitleUnit">SEQ</span></h1>
+        <div class="sub">
+          Built from your spreadsheet and upgraded into a multi-unit tracker with completion tracking, admin-only edit controls, printable work lists, and installable offline app support.
+        </div>
+        <div class="status-line">
+          <span id="saveStatus">Saved locally on this device</span>
+          <span id="installStatus">Installable on supported phones/tablets/browsers</span>
+        </div>
+        <div class="admin-bar">
+          <div class="pill" id="adminStatus">Admin locked • edit/delete hidden</div>
+          <div class="actions">
+            <button id="adminLoginBtn" class="secondary" style="width:auto;">Admin Login</button>
+            <button id="changePinBtn" class="secondary admin-only hidden-admin" style="width:auto;">Change PIN</button>
+            <button id="resetPinBtn" class="secondary admin-only hidden-admin" style="width:auto;">Reset PIN</button>
+            <button id="adminLogoutBtn" class="secondary admin-only hidden-admin" style="width:auto;">Admin Logout</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="stats">
+          <div class="stat"><div class="label">Visible Rows</div><div class="value" id="visibleRows">0</div></div>
+          <div class="stat"><div class="label">Visible Flanges</div><div class="value" id="visibleFlanges">0</div></div>
+          <div class="stat"><div class="label">Completed Items</div><div class="value" id="completedItems">0</div></div>
+          <div class="stat"><div class="label">Completed Flanges</div><div class="value" id="completedFlanges">0</div></div>
+          <div class="stat"><div class="label">Progress</div><div class="value" id="progressPct">0%</div></div>
+          <div class="stat"><div class="label">Decks</div><div class="value" id="deckCount">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <div class="unit-bar">
+        <div class="label-chip">Active Unit</div>
+        <select id="unitSelect" aria-label="Choose unit"></select>
+        <button id="addUnitBtn" class="secondary admin-only hidden-admin" style="width:auto;">Add Unit</button>
+        <button id="renameUnitBtn" class="secondary admin-only hidden-admin" style="width:auto;">Rename Unit</button>
+      </div>
+      <div class="unit-note">
+        Use the drop-down to switch between units. Each unit keeps its own rows, progress, and print lists inside the same app.
+      </div>
+      <div class="controls">
+        <input class="wide" id="searchInput" type="text" placeholder="Search equipment, size, torque, or deck..." />
+        <select id="deckFilter"></select>
+        <select id="sizeFilter"></select>
+        <select id="torqueFilter"></select>
+        <select id="statusFilter"></select>
+        <button id="addBtn" class="admin-only hidden-admin">Add Item</button>
+        <button id="printBtn" class="secondary">Print View</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+      <div class="toolbar-note">
+        Completion checkmarks are always available. Add, edit, and delete stay hidden until an admin logs in. The admin PIN can be changed after login.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="print-title" style="display:none;">
+        <h2 id="printHeading">Unit Work List</h2>
+        <div class="mini" id="printSubheading"></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Done</th>
+              <th>Status</th>
+              <th>Deck</th>
+              <th>Equipment</th>
+              <th>Flange Amount</th>
+              <th>Flange Size</th>
+              <th>Torque</th>
+              <th class="no-print admin-actions-head admin-only hidden-admin">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-grid no-print">
+      <div class="card">
+        <h2>Printable Deck Work Lists</h2>
+        <div class="deck-print-list" id="deckPrintList"></div>
+      </div>
+      <div class="card">
+        <h2>Data Tools</h2>
+        <div class="actions" style="margin-bottom:10px;">
+          <button id="exportBtn" class="secondary">Export Backup</button>
+          <button id="importBtn" class="secondary">Import Backup</button>
+          <button id="resetDataBtn" class="warn admin-only hidden-admin">Reset to Original</button>
+        </div>
+        <input id="importFile" type="file" accept="application/json" style="display:none;" />
+        <div class="sub">
+          Export creates a JSON backup of all units, including checkmarks and edits. Import restores a full app backup or a single unit array. Reset returns only the active unit to its original spreadsheet data. The admin PIN is stored on this device/browser.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="itemDialog">
+    <div class="modal-head">
+      <div>
+        <h2 id="dialogTitle" style="margin:0;">Add Item</h2>
+        <div class="mini">Admin login is required to add, edit, or delete items.</div>
+      </div>
+      <button id="closeDialogBtn" class="secondary" style="width:auto;">Close</button>
+    </div>
+    <form id="itemForm">
+      <div class="modal-body">
+        <input type="hidden" id="rowId" />
+        <div class="form-grid">
+          <div>
+            <label>Deck</label>
+            <input id="deckInput" required placeholder="Example: Ground" />
+          </div>
+          <div>
+            <label>Deck Sheet</label>
+            <input id="deckSheetInput" placeholder="Example: ground" />
+          </div>
+          <div class="full">
+            <label>Equipment</label>
+            <input id="equipmentInput" required placeholder="Equipment description" />
+          </div>
+          <div>
+            <label>Flange Amount</label>
+            <input id="flangeAmountInput" type="number" min="0" step="1" required />
+          </div>
+          <div>
+            <label>Flange Size</label>
+            <input id="flangeSizeInput" placeholder='Example: 2" 150#' />
+          </div>
+          <div>
+            <label>Torque</label>
+            <input id="torqueInput" placeholder="Example: 90lb-ft" />
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="completedInput">
+              <option value="false">Pending</option>
+              <option value="true">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div class="hint">Tip: Deck Sheet can match the deck name in lowercase for cleaner sorting.</div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" id="deleteCurrentBtn" class="danger">Delete</button>
+        <button type="submit">Save Item</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const originalData = [
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "K-03C to X-03B Spool",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "K-03C Inlet Spool",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "K-03B to K-03C Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-02B Bottom Head",
+    "flangeAmount": 1,
+    "flangeSize": "10 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-03B Bottom Head",
+    "flangeAmount": 1,
+    "flangeSize": "10 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-02B Outlet Spool",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-03B Outlet Spool",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-03B Outlet Spool",
+    "flangeAmount": 1,
+    "flangeSize": "1 1/2 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "K-02 Inlet Spool",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "K-02 to X-02B Spool",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "K-02 Inlet Check valve",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-08 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3/4\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-02B PRV",
+    "flangeAmount": 2,
+    "flangeSize": "1\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-03B PRV",
+    "flangeAmount": 2,
+    "flangeSize": "1\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-02B Top Head",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-03B Top Head",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-02B Inlet",
+    "flangeAmount": "N/A",
+    "flangeSize": "Union",
+    "torque": ""
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "HX-X-03B Inlet",
+    "flangeAmount": "N/A",
+    "flangeSize": "Union",
+    "torque": ""
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-02B Manway",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-02B Bottom Flange",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-02B Off Gas Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-03B Manway",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "X-03B Bottom Flange",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-11 Spare Suction Blind Flange",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 150",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-11 Spare Discharge Blind Flange",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-11 Suction Spool",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-11 Discharge Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-10 Discharge Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-10 Suction Expansion Joint",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-10 Spare Suction Blind Flange",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-10 Spare Discharge Blind Flange",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FT-4B01 Orifice Plate",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "Sequoia Feed Line Clean Out Blind Flange",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FT-5A02 Orifice",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-15 Spare Suction Blind Flange",
+    "flangeAmount": 1,
+    "flangeSize": "8\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-15 Suction Spool",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-15 Suction Spool",
+    "flangeAmount": 1,
+    "flangeSize": "6\"150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-15 Discharge Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "Asphalt Rundown Clean Out 1",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "Asphalt Rundown Clean Out 2",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-2 Suction Clean Out",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-2 Discharge Clean Out",
+    "flangeAmount": 1,
+    "flangeSize": "4\"  150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-9 Suction Clean Out",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "P-9 Discharge Clean Out",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "KA-03B Discharge Butterfly Valve",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "KS-03B Discharge Butterfly Valve",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "South Flame Arrestor Inlet Ball Valve",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "South Flame Arrestor Outlet Ball Valve",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Off Gas 1",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Off Gas 2",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Off Gas 3",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Off Gas 4",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Off Gas 5",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Off Gas 6",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "WWTP Off Gas Spool",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 PRV 1",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 PRV 1",
+    "flangeAmount": 1,
+    "flangeSize": "3\"300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 PRV 2",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 PRV 2",
+    "flangeAmount": 1,
+    "flangeSize": "3\"300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Door",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": ""
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Nitrogen",
+    "flangeAmount": 1,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "ground",
+    "deck": "Ground",
+    "equipment": "FH-400 Natural Gas Spool",
+    "flangeAmount": "N/A",
+    "flangeSize": "Union",
+    "torque": ""
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "P-10 Blind Flange 1",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "P-10 Blind Flange 2",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "LCV-5B01",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "PCV-4A01",
+    "flangeAmount": 2,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "KA-03A Inlet Butterfly Valve",
+    "flangeAmount": 2,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "KS-03A Inlet Butterfly Valve",
+    "flangeAmount": 2,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "HX-09 Bottom Spool",
+    "flangeAmount": 2,
+    "flangeSize": "8\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "D-15 Level Bridle",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "D-15 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150 #",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "HX-11 Level Bridle",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "HX-11 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "HX-11Outlet",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150 #",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "C-01 Bottom Spool",
+    "flangeAmount": 2,
+    "flangeSize": "8\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "D-02F Manway",
+    "flangeAmount": 1,
+    "flangeSize": "8\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "D-02F Level Bridle",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "D-02W Manway",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "D-02W Level Bridle",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "K-03A/B PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3/4\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "K-03A/B PRV",
+    "flangeAmount": 1,
+    "flangeSize": "1\"150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "HX-10 PRV",
+    "flangeAmount": null,
+    "flangeSize": "1\"150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "1st",
+    "deck": "1st Deck",
+    "equipment": "HX-10 Head",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": "220lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "Cooling Water Supply Header PSV",
+    "flangeAmount": 1,
+    "flangeSize": "3/4\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "Cooling Water Return Header PSV",
+    "flangeAmount": 1,
+    "flangeSize": "3/4\"150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "Off Gas 3-way",
+    "flangeAmount": 3,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "V-10 Outlet Spool",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "V-10 Outlet Spool",
+    "flangeAmount": 1,
+    "flangeSize": "6\"150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "C-09 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "HX-09 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "C-09 Discharge Valve",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "HX-09A Bottom Head",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": "343lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "HX-09 Level Bridle",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "X-02A PSV",
+    "flangeAmount": 1,
+    "flangeSize": "1\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "X-02A PSV",
+    "flangeAmount": 1,
+    "flangeSize": "2\"150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "X-03A PSV",
+    "flangeAmount": 1,
+    "flangeSize": "1 1/2\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "X-03A PSV",
+    "flangeAmount": 1,
+    "flangeSize": "2\"150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "C-01 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "2nd",
+    "deck": "2nd Deck",
+    "equipment": "C-01 Inlet Flow Restriction Plate",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150\"",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "FT-4A02 Orifice Plate",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "V-10 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\"150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "HX-19 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\"150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "HX-11 Head",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "HX-11 Cooling Water Supply",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "HX-11 Cooling Water Return",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "HX-11 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3/4\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "D-02 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "D-02 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "6\"150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "3rd",
+    "deck": "3rd Floor",
+    "equipment": "D-02 Head",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "C-09 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "C-09 to V-10 Spool 1",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "C-09 to V-10 Spool 2",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-19 Head",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": "300lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-19 Tube Loading",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-19 Feed",
+    "flangeAmount": 1,
+    "flangeSize": "1 1/2\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-19 Feed",
+    "flangeAmount": 1,
+    "flangeSize": "8\"150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-19 PRV Spool",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "FT-4B02 Orifice Plate",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 300#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "Feed Line Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09A to C-01 Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-03 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "10\" 150#",
+    "torque": "250lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-03 Level Bridle",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09A Inlet",
+    "flangeAmount": 1,
+    "flangeSize": "6\" 300#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09A Outlet",
+    "flangeAmount": 1,
+    "flangeSize": "6\" 300#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09A To Head",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": "343lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09 Feed Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09 Feed Spool",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09A Discharge Valve",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09A Bypass Check Valve",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "4th",
+    "deck": "4th Deck",
+    "equipment": "HX-09 Inlet",
+    "flangeAmount": 1,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "C-09 Strainer Inlet Spool",
+    "flangeAmount": 1,
+    "flangeSize": "8\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "C-09 Manway",
+    "flangeAmount": 1,
+    "flangeSize": "24\" 150#",
+    "torque": "800lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-09 PRV Spool",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150 #",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-09 PRV Spool",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "LCV-3A01",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "C-01 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3\"150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "C-01 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "1 1/2 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "FT-4A03 Orifice Plate",
+    "flangeAmount": 2,
+    "flangeSize": "4\" 300#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-09A Spool",
+    "flangeAmount": 2,
+    "flangeSize": "6\" 150#",
+    "torque": "150lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-03 Head",
+    "flangeAmount": 1,
+    "flangeSize": "Special",
+    "torque": "130lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-03 Cooling Water Supply",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-03 Cooling Water Return",
+    "flangeAmount": 1,
+    "flangeSize": "4\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-03 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3/4\" 150#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "C-01 to HX-03 Crossover",
+    "flangeAmount": 2,
+    "flangeSize": "14\" 150#",
+    "torque": "350lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "FT-5A01 Orifice Plate",
+    "flangeAmount": 2,
+    "flangeSize": "1\" 300#",
+    "torque": "45lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "LCV-4A01",
+    "flangeAmount": 2,
+    "flangeSize": "2\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "LCV-4A01 Bypass Spool",
+    "flangeAmount": 2,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-19 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "HX-19 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "2\"150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "V-401 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "3\" 150#",
+    "torque": "90lb-ft"
+  },
+  {
+    "deck_sheet": "5th",
+    "deck": "5th Deck",
+    "equipment": "V-401 PRV",
+    "flangeAmount": 1,
+    "flangeSize": "2\"150#",
+    "torque": "90lb-ft"
+  }
+];
+
+    const STORAGE_KEY = "seq-flange-tracker-pro-v1";
+    const UNITS_STORAGE_KEY = "seq-flange-tracker-units-v1";
+    const CURRENT_UNIT_KEY = "seq-flange-tracker-current-unit-v1";
+    const ADMIN_SESSION_KEY = "seq-flange-tracker-admin-session-v1";
+    const ADMIN_PIN_KEY = "seq-flange-tracker-admin-pin-v1";
+    const DEFAULT_ADMIN_PIN = "1234";
+    const DEFAULT_UNIT_NAME = "SEQ";
+    const defaultUnits = {
+      [DEFAULT_UNIT_NAME]: normalizeSeed(originalData)
+    };
+    const app = {
+      rows: [],
+      filteredRows: [],
+      units: {},
+      currentUnit: DEFAULT_UNIT_NAME,
+      deferredPrompt: null,
+      isAdmin: false
+    };
+
+    function getStoredAdminPin() {
+      return localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
+    }
+
+    function setStoredAdminPin(pin) {
+      localStorage.setItem(ADMIN_PIN_KEY, pin);
+    }
+
+
+    function updateAdminUi() {
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.classList.toggle('hidden-admin', !app.isAdmin);
+      });
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = app.isAdmin ? '' : 'none';
+      });
+      const status = document.getElementById('adminStatus');
+      if (status) status.textContent = app.isAdmin ? 'Admin unlocked • edit/delete visible' : 'Admin locked • edit/delete hidden';
+      const loginBtn = document.getElementById('adminLoginBtn');
+      const logoutBtn = document.getElementById('adminLogoutBtn');
+      const changePinBtn = document.getElementById('changePinBtn');
+      const resetPinBtn = document.getElementById('resetPinBtn');
+      if (loginBtn) loginBtn.style.display = app.isAdmin ? 'none' : 'inline-block';
+      if (logoutBtn) logoutBtn.style.display = app.isAdmin ? 'inline-block' : 'none';
+      if (changePinBtn) changePinBtn.style.display = app.isAdmin ? 'inline-block' : 'none';
+      if (resetPinBtn) resetPinBtn.style.display = app.isAdmin ? 'inline-block' : 'none';
+      const head = document.querySelector('.admin-actions-head');
+      if (head) head.style.display = app.isAdmin ? '' : 'none';
+    }
+
+    function adminLogin() {
+      const pin = prompt('Enter admin PIN');
+      if (pin === null) return;
+      if (pin === getStoredAdminPin()) {
+        app.isAdmin = true;
+        localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+        updateAdminUi();
+        alert('Admin mode is now unlocked.');
+      } else {
+        alert('Incorrect PIN.');
+      }
+    }
+
+    function changeAdminPin() {
+      if (!app.isAdmin) {
+        alert('Admin login required.');
+        return;
+      }
+      const currentPin = prompt('Enter current admin PIN');
+      if (currentPin === null) return;
+      if (currentPin !== getStoredAdminPin()) {
+        alert('Current PIN is incorrect.');
+        return;
+      }
+      const newPin = prompt('Enter new admin PIN (4 to 12 digits)');
+      if (newPin === null) return;
+      if (!/^\d{4,12}$/.test(newPin)) {
+        alert('PIN must be 4 to 12 digits.');
+        return;
+      }
+      const confirmPin = prompt('Re-enter new admin PIN');
+      if (confirmPin === null) return;
+      if (newPin !== confirmPin) {
+        alert('New PIN entries did not match.');
+        return;
+      }
+      setStoredAdminPin(newPin);
+      alert('Admin PIN updated for this device/browser.');
+    }
+
+    function resetAdminPin() {
+      if (!app.isAdmin) {
+        alert('Admin login required.');
+        return;
+      }
+      if (!confirm('Reset the admin PIN back to the default PIN 1234 on this device/browser?')) return;
+      localStorage.removeItem(ADMIN_PIN_KEY);
+      alert('Admin PIN reset to default: 1234');
+    }
+
+    function adminLogout() {
+      app.isAdmin = false;
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+      updateAdminUi();
+      closeDialog();
+    }
+
+    function loadAdminSession() {
+      app.isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+    }
+
+    function normalizeSeed(rows) {
+      return rows.map((row, index) => {
+        const deck = (row.deck || row.deck_sheet || "").trim() || "Unknown";
+        const deckSheet = (row.deck_sheet || deck.toLowerCase()).trim();
+        return {
+          id: row.id || `seed-${index + 1}`,
+          deck_sheet: deckSheet,
+          deck,
+          equipment: row.equipment || "",
+          flangeAmount: Number(row.flangeAmount ?? 0) || 0,
+          flangeSize: row.flangeSize || "",
+          torque: row.torque || "",
+          completed: Boolean(row.completed)
+        };
+      });
+    }
+
+    function sanitizeUnitName(name) {
+      return String(name || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function getUnitNames() {
+      return Object.keys(app.units).sort((a,b) => a.localeCompare(b, undefined, {numeric:true}));
+    }
+
+    function getDefaultRowsForUnit(unitName) {
+      return unitName === DEFAULT_UNIT_NAME ? normalizeSeed(originalData) : [];
+    }
+
+    function migrateLegacyRowsIfNeeded() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (Array.isArray(saved) && saved.length) {
+          const normalized = normalizeSeed(saved);
+          localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify({ [DEFAULT_UNIT_NAME]: normalized }));
+          localStorage.removeItem(STORAGE_KEY);
+          return { [DEFAULT_UNIT_NAME]: normalized };
+        }
+      } catch (error) {
+        console.warn('Could not migrate legacy data', error);
+      }
+      return null;
+    }
+
+    function loadUnits() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(UNITS_STORAGE_KEY) || 'null');
+        if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+          const normalizedUnits = {};
+          for (const [unitName, rows] of Object.entries(saved)) {
+            const cleanName = sanitizeUnitName(unitName);
+            if (!cleanName) continue;
+            normalizedUnits[cleanName] = normalizeSeed(Array.isArray(rows) ? rows : []);
+          }
+          if (Object.keys(normalizedUnits).length) return normalizedUnits;
+        }
+      } catch (error) {
+        console.warn('Could not load saved unit data', error);
+      }
+      const migrated = migrateLegacyRowsIfNeeded();
+      if (migrated) return migrated;
+      return Object.fromEntries(Object.entries(defaultUnits).map(([name, rows]) => [name, normalizeSeed(rows)]));
+    }
+
+    function saveUnits() {
+      localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify(app.units));
+      localStorage.setItem(CURRENT_UNIT_KEY, app.currentUnit);
+      const ts = new Date();
+      document.getElementById("saveStatus").textContent = `Saved locally on this device • ${ts.toLocaleDateString()} ${ts.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    function setCurrentUnit(unitName) {
+      const cleanName = sanitizeUnitName(unitName);
+      if (!cleanName || !app.units[cleanName]) return;
+      app.currentUnit = cleanName;
+      app.rows = app.units[cleanName];
+      localStorage.setItem(CURRENT_UNIT_KEY, app.currentUnit);
+      updateUnitUi();
+      fillFilters();
+      applyFilters();
+    }
+
+    function fillUnitSelect() {
+      const select = document.getElementById('unitSelect');
+      const names = getUnitNames();
+      select.innerHTML = names.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      select.value = app.currentUnit;
+    }
+
+    function updateUnitUi() {
+      fillUnitSelect();
+      document.getElementById('appTitleUnit').textContent = app.currentUnit;
+      document.title = `Fallon Safety-Kleen Turnaround Tracker Pro – ${app.currentUnit}`;
+      document.getElementById('printHeading').textContent = `Fallon Safety-Kleen Turnaround Tracker Pro – ${app.currentUnit} Work List`;
+    }
+
+    function addUnit() {
+      if (!app.isAdmin) {
+        alert('Admin login required.');
+        return;
+      }
+      const name = sanitizeUnitName(prompt('Enter the new unit name'));
+      if (!name) return;
+      if (app.units[name]) {
+        alert('That unit already exists.');
+        return;
+      }
+      app.units[name] = [];
+      saveUnits();
+      setCurrentUnit(name);
+    }
+
+    function renameCurrentUnit() {
+      if (!app.isAdmin) {
+        alert('Admin login required.');
+        return;
+      }
+      const oldName = app.currentUnit;
+      const name = sanitizeUnitName(prompt('Rename current unit', oldName));
+      if (!name || name === oldName) return;
+      if (app.units[name]) {
+        alert('That unit name already exists.');
+        return;
+      }
+      app.units[name] = app.units[oldName];
+      delete app.units[oldName];
+      saveUnits();
+      setCurrentUnit(name);
+    }
+
+    function saveRows() {
+      app.units[app.currentUnit] = app.rows;
+      saveUnits();
+    }
+
+    function loadRows() {
+      const current = sanitizeUnitName(localStorage.getItem(CURRENT_UNIT_KEY) || DEFAULT_UNIT_NAME);
+      app.units = loadUnits();
+      if (!app.units[current]) {
+        const firstUnit = getUnitNames()[0] || DEFAULT_UNIT_NAME;
+        app.currentUnit = firstUnit;
+      } else {
+        app.currentUnit = current;
+      }
+      app.rows = app.units[app.currentUnit] || [];
+      return app.rows;
+    }
+
+    function getUniqueValues(field) {
+      return [...new Set(app.rows.map(row => (row[field] || "").trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, undefined, {numeric:true}));
+    }
+
+    function fillSelect(selectId, values, label) {
+      const select = document.getElementById(selectId);
+      const current = select.value;
+      select.innerHTML = `<option value="">All ${label}</option>` + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join("");
+      if ([...select.options].some(option => option.value === current)) {
+        select.value = current;
+      }
+    }
+
+    function fillFilters() {
+      fillSelect("deckFilter", getUniqueValues("deck"), "Decks");
+      fillSelect("sizeFilter", getUniqueValues("flangeSize"), "Sizes");
+      fillSelect("torqueFilter", getUniqueValues("torque"), "Torque");
+      const statusFilter = document.getElementById("statusFilter");
+      if (!statusFilter.options.length) {
+        statusFilter.innerHTML = `
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+        `;
+      }
+      renderDeckPrintCards();
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function sortRows(rows) {
+      return [...rows].sort((a,b) => {
+        const byDeck = (a.deck || "").localeCompare(b.deck || "", undefined, {numeric:true});
+        if (byDeck !== 0) return byDeck;
+        const byEquipment = (a.equipment || "").localeCompare(b.equipment || "", undefined, {numeric:true});
+        if (byEquipment !== 0) return byEquipment;
+        return String(a.id).localeCompare(String(b.id), undefined, {numeric:true});
+      });
+    }
+
+    function applyFilters() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const deck = document.getElementById("deckFilter").value;
+      const size = document.getElementById("sizeFilter").value;
+      const torque = document.getElementById("torqueFilter").value;
+      const status = document.getElementById("statusFilter").value;
+
+      const filtered = app.rows.filter(row => {
+        const haystack = [row.deck, row.deck_sheet, row.equipment, row.flangeSize, row.torque, row.flangeAmount].join(" ").toLowerCase();
+        const matchesSearch = !q || haystack.includes(q);
+        const matchesDeck = !deck || row.deck === deck;
+        const matchesSize = !size || row.flangeSize === size;
+        const matchesTorque = !torque || row.torque === torque;
+        const matchesStatus = !status || (status === "completed" ? row.completed : !row.completed);
+        return matchesSearch && matchesDeck && matchesSize && matchesTorque && matchesStatus;
+      });
+
+      app.filteredRows = sortRows(filtered);
+      renderTable();
+      updateStats();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("resultsBody");
+      if (!app.filteredRows.length) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:28px;">No rows match the current filters.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = app.filteredRows.map(row => `
+        <tr class="${row.completed ? 'complete-row' : ''}">
+          <td><input class="checkbox" type="checkbox" data-id="${row.id}" ${row.completed ? "checked" : ""} aria-label="Toggle completed" /></td>
+          <td><span class="${row.completed ? 'complete-badge' : 'complete-badge pending-badge'}">${row.completed ? "Completed" : "Pending"}</span></td>
+          <td><span class="deck-pill">${escapeHtml(row.deck)}</span></td>
+          <td>${escapeHtml(row.equipment)}</td>
+          <td>${Number(row.flangeAmount) || 0}</td>
+          <td>${escapeHtml(row.flangeSize)}</td>
+          <td>${escapeHtml(row.torque)}</td>
+          <td class="no-print" style="display:${app.isAdmin ? '' : 'none'};">
+            <div class="actions">
+              <button class="secondary edit-btn" data-id="${row.id}" style="width:auto;">Edit</button>
+              <button class="danger delete-btn" data-id="${row.id}" style="width:auto;">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function updateStats() {
+      const visibleRows = app.filteredRows.length;
+      const visibleFlanges = app.filteredRows.reduce((sum, row) => sum + (Number(row.flangeAmount) || 0), 0);
+      const completedItems = app.rows.filter(row => row.completed).length;
+      const completedFlanges = app.rows.filter(row => row.completed).reduce((sum, row) => sum + (Number(row.flangeAmount) || 0), 0);
+      const totalItems = app.rows.length || 1;
+      document.getElementById("deckCount").previousElementSibling.textContent = "Decks in Unit";
+      const progress = Math.round((completedItems / totalItems) * 100);
+
+      document.getElementById("visibleRows").textContent = String(visibleRows);
+      document.getElementById("visibleFlanges").textContent = String(visibleFlanges);
+      document.getElementById("completedItems").textContent = String(completedItems);
+      document.getElementById("completedFlanges").textContent = String(completedFlanges);
+      document.getElementById("progressPct").textContent = `${progress}%`;
+      document.getElementById("deckCount").textContent = String(getUniqueValues("deck").length);
+    }
+
+    function renderDeckPrintCards() {
+      const wrap = document.getElementById("deckPrintList");
+      const decks = getUniqueValues("deck");
+      if (!decks.length) {
+        wrap.innerHTML = `<div class="sub">No decks found.</div>`;
+        return;
+      }
+      wrap.innerHTML = decks.map(deck => {
+        const rows = app.rows.filter(row => row.deck === deck);
+        const completed = rows.filter(row => row.completed).length;
+        const flanges = rows.reduce((sum, row) => sum + (Number(row.flangeAmount) || 0), 0);
+        return `
+          <div class="deck-card">
+            <h3>${escapeHtml(deck)}</h3>
+            <p>${rows.length} items • ${flanges} flanges</p>
+            <p>${completed} completed</p>
+            <div class="actions" style="margin-top:10px;">
+              <button class="secondary print-deck-btn" data-deck="${escapeHtml(deck)}">Print Deck</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function openDialog(row = null) {
+      if (!app.isAdmin) {
+        alert("Admin login required.");
+        return;
+      }
+      document.getElementById("itemForm").reset();
+      document.getElementById("rowId").value = row?.id || "";
+      document.getElementById("deckInput").value = row?.deck || "";
+      document.getElementById("deckSheetInput").value = row?.deck_sheet || "";
+      document.getElementById("equipmentInput").value = row?.equipment || "";
+      document.getElementById("flangeAmountInput").value = row?.flangeAmount ?? 0;
+      document.getElementById("flangeSizeInput").value = row?.flangeSize || "";
+      document.getElementById("torqueInput").value = row?.torque || "";
+      document.getElementById("completedInput").value = row?.completed ? "true" : "false";
+      document.getElementById("dialogTitle").textContent = row ? "Edit Item" : "Add Item";
+      document.getElementById("deleteCurrentBtn").style.display = row ? "inline-block" : "none";
+      document.getElementById("itemDialog").showModal();
+    }
+
+    function closeDialog() {
+      document.getElementById("itemDialog").close();
+    }
+
+    function upsertRowFromForm(event) {
+      event.preventDefault();
+      if (!app.isAdmin) return;
+      const id = document.getElementById("rowId").value || `row-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+      const deck = document.getElementById("deckInput").value.trim() || "Unknown";
+      const deckSheetValue = document.getElementById("deckSheetInput").value.trim();
+      const row = {
+        id,
+        deck,
+        deck_sheet: deckSheetValue || deck.toLowerCase().replaceAll(/\s+/g, "_"),
+        equipment: document.getElementById("equipmentInput").value.trim(),
+        flangeAmount: Number(document.getElementById("flangeAmountInput").value) || 0,
+        flangeSize: document.getElementById("flangeSizeInput").value.trim(),
+        torque: document.getElementById("torqueInput").value.trim(),
+        completed: document.getElementById("completedInput").value === "true"
+      };
+      const index = app.rows.findIndex(item => item.id === id);
+      if (index >= 0) app.rows[index] = row;
+      else app.rows.push(row);
+
+      saveRows();
+      fillFilters();
+      applyFilters();
+      closeDialog();
+    }
+
+    function deleteRow(id) {
+      if (!app.isAdmin) {
+        alert("Admin login required.");
+        return;
+      }
+      const row = app.rows.find(item => item.id === id);
+      if (!row) return;
+      if (!confirm(`Delete "${row.equipment}"?`)) return;
+      app.rows = app.rows.filter(item => item.id !== id);
+      saveRows();
+      fillFilters();
+      applyFilters();
+      closeDialog();
+    }
+
+    function resetFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("deckFilter").value = "";
+      document.getElementById("sizeFilter").value = "";
+      document.getElementById("torqueFilter").value = "";
+      document.getElementById("statusFilter").value = "";
+      applyFilters();
+    }
+
+    function resetData() {
+      if (!app.isAdmin) {
+        alert("Admin login required.");
+        return;
+      }
+      if (!confirm(`Reset all edits and checkmarks for ${app.currentUnit} back to its original data?`)) return;
+      app.rows = getDefaultRowsForUnit(app.currentUnit);
+      app.units[app.currentUnit] = app.rows;
+      saveRows();
+      fillFilters();
+      resetFilters();
+    }
+
+    function exportBackup() {
+      const backup = { currentUnit: app.currentUnit, units: app.units };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "flange_tracker_multi_unit_backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importBackup(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (Array.isArray(parsed)) {
+            app.units[app.currentUnit] = normalizeSeed(parsed);
+            app.rows = app.units[app.currentUnit];
+          } else if (parsed && typeof parsed === 'object' && parsed.units && typeof parsed.units === 'object') {
+            const importedUnits = {};
+            for (const [unitName, rows] of Object.entries(parsed.units)) {
+              const cleanName = sanitizeUnitName(unitName);
+              if (!cleanName) continue;
+              importedUnits[cleanName] = normalizeSeed(Array.isArray(rows) ? rows : []);
+            }
+            if (!Object.keys(importedUnits).length) throw new Error('Invalid backup');
+            app.units = importedUnits;
+            app.currentUnit = sanitizeUnitName(parsed.currentUnit) || Object.keys(importedUnits)[0];
+            if (!app.units[app.currentUnit]) app.currentUnit = Object.keys(importedUnits)[0];
+            app.rows = app.units[app.currentUnit];
+          } else {
+            throw new Error('Invalid backup');
+          }
+          saveUnits();
+          updateUnitUi();
+          fillFilters();
+          resetFilters();
+        } catch (error) {
+          alert("That backup file could not be imported.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function printDeck(deck = "") {
+      if (deck) {
+        document.getElementById("deckFilter").value = deck;
+      }
+      document.getElementById("statusFilter").value = "";
+      applyFilters();
+      const deckLabel = deck || document.getElementById("deckFilter").value || "All Decks";
+      document.getElementById("printHeading").textContent = `Fallon Safety-Kleen Turnaround Tracker Pro – ${app.currentUnit} • ${deckLabel}`;
+      document.getElementById("printSubheading").textContent = `Generated ${new Date().toLocaleString()}`;
+      window.print();
+    }
+
+    function attachEvents() {
+      ["searchInput", "deckFilter", "sizeFilter", "torqueFilter", "statusFilter"].forEach(id => {
+        document.getElementById(id).addEventListener("input", applyFilters);
+        document.getElementById(id).addEventListener("change", applyFilters);
+      });
+
+      document.getElementById("unitSelect").addEventListener("change", event => setCurrentUnit(event.target.value));
+      document.getElementById("addUnitBtn").addEventListener("click", addUnit);
+      document.getElementById("renameUnitBtn").addEventListener("click", renameCurrentUnit);
+      document.getElementById("addBtn").addEventListener("click", () => openDialog());
+      document.getElementById("adminLoginBtn").addEventListener("click", adminLogin);
+      document.getElementById("changePinBtn").addEventListener("click", changeAdminPin);
+      document.getElementById("resetPinBtn").addEventListener("click", resetAdminPin);
+      document.getElementById("adminLogoutBtn").addEventListener("click", adminLogout);
+      document.getElementById("printBtn").addEventListener("click", () => printDeck());
+      document.getElementById("resetBtn").addEventListener("click", resetFilters);
+      document.getElementById("resetDataBtn").addEventListener("click", resetData);
+      document.getElementById("exportBtn").addEventListener("click", exportBackup);
+      document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+      document.getElementById("importFile").addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) importBackup(file);
+        event.target.value = "";
+      });
+      document.getElementById("itemForm").addEventListener("submit", upsertRowFromForm);
+      document.getElementById("closeDialogBtn").addEventListener("click", closeDialog);
+      document.getElementById("deleteCurrentBtn").addEventListener("click", () => {
+        const id = document.getElementById("rowId").value;
+        if (id) deleteRow(id);
+      });
+
+      document.getElementById("resultsBody").addEventListener("click", event => {
+        const editBtn = event.target.closest(".edit-btn");
+        const deleteBtn = event.target.closest(".delete-btn");
+        if (editBtn) {
+          const row = app.rows.find(item => item.id === editBtn.dataset.id);
+          if (row) openDialog(row);
+        }
+        if (deleteBtn) {
+          deleteRow(deleteBtn.dataset.id);
+        }
+      });
+
+      document.getElementById("resultsBody").addEventListener("change", event => {
+        const checkbox = event.target.closest(".checkbox");
+        if (!checkbox) return;
+        const row = app.rows.find(item => item.id === checkbox.dataset.id);
+        if (!row) return;
+        row.completed = checkbox.checked;
+        saveRows();
+        applyFilters();
+        renderDeckPrintCards();
+      });
+
+      document.getElementById("deckPrintList").addEventListener("click", event => {
+        const btn = event.target.closest(".print-deck-btn");
+        if (btn) printDeck(btn.dataset.deck);
+      });
+
+      window.addEventListener("beforeinstallprompt", event => {
+        event.preventDefault();
+        app.deferredPrompt = event;
+        document.getElementById("installStatus").textContent = "App can be installed from your browser menu";
+      });
+    }
+
+    async function registerServiceWorker() {
+      if ("serviceWorker" in navigator) {
+        try {
+          
+        } catch (error) {
+          console.warn("Service worker registration failed", error);
+        }
+      }
+    }
+
+    function init() {
+      loadAdminSession();
+      app.rows = loadRows();
+      updateUnitUi();
+      fillFilters();
+      attachEvents();
+      updateAdminUi();
+      applyFilters();
+      registerServiceWorker();
+    }
+
+    init();
+  </script>
+</body>
+</html>
