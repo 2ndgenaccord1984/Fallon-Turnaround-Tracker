@@ -505,6 +505,7 @@
         <div class="actions" style="margin-bottom:10px;">
           <button id="exportBtn" class="secondary">Export Backup</button>
           <button id="importBtn" class="secondary">Import Backup</button>
+          <button id="resetTurnaroundBtn" class="warn admin-only hidden-admin">Reset Turnaround</button>
           <button id="resetDataBtn" class="warn admin-only hidden-admin">Reset to Original</button>
         </div>
         <input id="importFile" type="file" accept="application/json" style="display:none;" />
@@ -585,7 +586,6 @@
     </form>
   </dialog>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
   <script src="./firebase-config.js"></script>
 
   <script>
@@ -3131,6 +3131,19 @@
       applyFilters();
     }
 
+    function resetTurnaround() {
+      if (!app.isAdmin) {
+        alert("Admin login required.");
+        return;
+      }
+      if (!confirm(`Reset only the Unbolted and Rebolted / Torqued checkmarks for ${app.currentUnit}? The flange list and edits will stay in place.`)) return;
+      app.rows = app.rows.map(row => ({ ...row, unbolted: false, rebolted: false, completed: false }));
+      app.units[app.currentUnit] = app.rows;
+      saveRows();
+      fillFilters();
+      resetFilters();
+    }
+
     function resetData() {
       if (!app.isAdmin) {
         alert("Admin login required.");
@@ -3211,14 +3224,13 @@
       document.getElementById("addUnitBtn").addEventListener("click", addUnit);
       document.getElementById("renameUnitBtn").addEventListener("click", renameCurrentUnit);
       document.getElementById("addBtn").addEventListener("click", () => openDialog());
-	  document.getElementById("ownerLoginBtn").addEventListener("click", ownerLogin);
-	  document.getElementById("ownerLogoutBtn").addEventListener("click", ownerLogout);
       document.getElementById("adminLoginBtn").addEventListener("click", adminLogin);
       document.getElementById("changePinBtn").addEventListener("click", changeAdminPin);
       document.getElementById("resetPinBtn").addEventListener("click", resetAdminPin);
       document.getElementById("adminLogoutBtn").addEventListener("click", adminLogout);
       document.getElementById("printBtn").addEventListener("click", () => printDeck());
       document.getElementById("resetBtn").addEventListener("click", resetFilters);
+      document.getElementById("resetTurnaroundBtn").addEventListener("click", resetTurnaround);
       document.getElementById("resetDataBtn").addEventListener("click", resetData);
       document.getElementById("exportBtn").addEventListener("click", exportBackup);
       document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
