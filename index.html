@@ -212,6 +212,12 @@
     .complete-row td {
       color: #d1fae5;
     }
+    .inprogress-row {
+      background: rgba(245,158,11,.08);
+    }
+    .inprogress-row td {
+      color: #fde68a;
+    }
     .complete-badge, .deck-pill {
       display: inline-block;
       padding: 5px 10px;
@@ -224,10 +230,15 @@
       color: #86efac;
       border-color: rgba(34,197,94,.25);
     }
-    .pending-badge {
+    .inprogress-badge {
       background: rgba(245,158,11,.15);
       color: #fcd34d;
       border-color: rgba(245,158,11,.25);
+    }
+    .pending-badge {
+      background: rgba(148,163,184,.14);
+      color: #cbd5e1;
+      border-color: rgba(148,163,184,.24);
     }
     .deck-pill {
       background: rgba(56,189,248,.15);
@@ -421,10 +432,10 @@
         <div class="stats">
           <div class="stat"><div class="label">Visible Rows</div><div class="value" id="visibleRows">0</div></div>
           <div class="stat"><div class="label">Visible Flanges</div><div class="value" id="visibleFlanges">0</div></div>
-          <div class="stat"><div class="label">Completed Items</div><div class="value" id="completedItems">0</div></div>
-          <div class="stat"><div class="label">Completed Flanges</div><div class="value" id="completedFlanges">0</div></div>
-          <div class="stat"><div class="label">Progress</div><div class="value" id="progressPct">0%</div></div>
-          <div class="stat"><div class="label">Decks</div><div class="value" id="deckCount">0</div></div>
+          <div class="stat"><div class="label">Unbolted Items</div><div class="value" id="unboltedItems">0</div></div>
+          <div class="stat"><div class="label">Unbolted Progress</div><div class="value" id="unboltedProgressPct">0%</div></div>
+          <div class="stat"><div class="label">Rebolted / Torqued</div><div class="value" id="reboltedItems">0</div></div>
+          <div class="stat"><div class="label">Rebolted Progress</div><div class="value" id="reboltedProgressPct">0%</div></div>
         </div>
       </div>
     </div>
@@ -450,7 +461,7 @@
         <button id="resetBtn" class="secondary">Reset</button>
       </div>
       <div class="toolbar-note">
-        Completion checkmarks are always available. Add, edit, and delete stay hidden until an admin logs in. The admin PIN can be changed after login.
+        Unbolted and Rebolted/Torqued checkmarks are always available. Add, edit, and delete stay hidden until an admin logs in. Rebolted/Torqued progress counts as completed work.
       </div>
     </div>
 
@@ -463,7 +474,8 @@
         <table>
           <thead>
             <tr>
-              <th>Done</th>
+              <th>Unbolted</th>
+              <th>Rebolted / Torqued</th>
               <th>Status</th>
               <th>Deck</th>
               <th>Equipment</th>
@@ -501,7 +513,7 @@
             To share updates with everyone, paste your Firebase web config into the Firebase config section near the bottom of this file, or into firebase-config.js in the deploy package, then redeploy to Vercel.
           </div>
           <div class="mini" style="margin-top:10px;">
-            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, checkmarks, added units, and edits for everyone using the same site. This version preloads SEQ, PESCO, and HT.
+            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, unbolted/rebolted checkmarks, added units, and edits for everyone using the same site. This version preloads SEQ, PESCO, and HT.
           </div>
         </div>
       </div>
@@ -545,10 +557,17 @@
             <input id="torqueInput" placeholder="Example: 90lb-ft" />
           </div>
           <div>
-            <label>Status</label>
-            <select id="completedInput">
-              <option value="false">Pending</option>
-              <option value="true">Completed</option>
+            <label>Unbolted</label>
+            <select id="unboltedInput">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+          <div>
+            <label>Rebolted / Torqued</label>
+            <select id="reboltedInput">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
             </select>
           </div>
         </div>
@@ -2523,7 +2542,8 @@
           flangeAmount: Number(row.flangeAmount ?? 0) || 0,
           flangeSize: row.flangeSize || "",
           torque: row.torque || "",
-          completed: Boolean(row.completed)
+          unbolted: Boolean(row.rebolted || row.completed || row.unbolted),
+          rebolted: Boolean(row.rebolted || row.completed)
         };
       });
     }
@@ -2803,8 +2823,9 @@
       if (!statusFilter.options.length) {
         statusFilter.innerHTML = `
           <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
+          <option value="pending">Not Started</option>
+          <option value="unbolted">Unbolted Only</option>
+          <option value="completed">Rebolted / Torqued</option>
         `;
       }
       renderDeckPrintCards();
@@ -2842,7 +2863,7 @@
         const matchesDeck = !deck || row.deck === deck;
         const matchesSize = !size || row.flangeSize === size;
         const matchesTorque = !torque || row.torque === torque;
-        const matchesStatus = !status || (status === "completed" ? row.completed : !row.completed);
+        const matchesStatus = !status || (status === "completed" ? row.rebolted : status === "unbolted" ? (row.unbolted && !row.rebolted) : (!row.unbolted && !row.rebolted));
         return matchesSearch && matchesDeck && matchesSize && matchesTorque && matchesStatus;
       });
 
@@ -2854,14 +2875,19 @@
     function renderTable() {
       const tbody = document.getElementById("resultsBody");
       if (!app.filteredRows.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:28px;">No rows match the current filters.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:28px;">No rows match the current filters.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = app.filteredRows.map(row => `
-        <tr class="${row.completed ? 'complete-row' : ''}">
-          <td><input class="checkbox" type="checkbox" data-id="${row.id}" ${row.completed ? "checked" : ""} aria-label="Toggle completed" /></td>
-          <td><span class="${row.completed ? 'complete-badge' : 'complete-badge pending-badge'}">${row.completed ? "Completed" : "Pending"}</span></td>
+      tbody.innerHTML = app.filteredRows.map(row => {
+        const rowClass = row.rebolted ? 'complete-row' : (row.unbolted ? 'inprogress-row' : '');
+        const statusClass = row.rebolted ? 'complete-badge' : (row.unbolted ? 'complete-badge inprogress-badge' : 'complete-badge pending-badge');
+        const statusText = row.rebolted ? 'Rebolted / Torqued' : (row.unbolted ? 'Unbolted' : 'Not Started');
+        return `
+        <tr class="${rowClass}">
+          <td><input class="checkbox unbolted-checkbox" type="checkbox" data-id="${row.id}" ${row.unbolted ? "checked" : ""} aria-label="Toggle unbolted" /></td>
+          <td><input class="checkbox rebolted-checkbox" type="checkbox" data-id="${row.id}" ${row.rebolted ? "checked" : ""} aria-label="Toggle rebolted or torqued" /></td>
+          <td><span class="${statusClass}">${statusText}</span></td>
           <td><span class="deck-pill">${escapeHtml(row.deck)}</span></td>
           <td>${escapeHtml(row.equipment)}</td>
           <td>${Number(row.flangeAmount) || 0}</td>
@@ -2874,24 +2900,24 @@
             </div>
           </td>
         </tr>
-      `).join("");
+      `}).join("");
     }
 
     function updateStats() {
       const visibleRows = app.filteredRows.length;
       const visibleFlanges = app.filteredRows.reduce((sum, row) => sum + (Number(row.flangeAmount) || 0), 0);
-      const completedItems = app.rows.filter(row => row.completed).length;
-      const completedFlanges = app.rows.filter(row => row.completed).reduce((sum, row) => sum + (Number(row.flangeAmount) || 0), 0);
+      const unboltedItems = app.rows.filter(row => row.unbolted).length;
+      const reboltedItems = app.rows.filter(row => row.rebolted).length;
       const totalItems = app.rows.length || 1;
-      document.getElementById("deckCount").previousElementSibling.textContent = "Decks in Unit";
-      const progress = Math.round((completedItems / totalItems) * 100);
+      const unboltedProgress = Math.round((unboltedItems / totalItems) * 100);
+      const reboltedProgress = Math.round((reboltedItems / totalItems) * 100);
 
       document.getElementById("visibleRows").textContent = String(visibleRows);
       document.getElementById("visibleFlanges").textContent = String(visibleFlanges);
-      document.getElementById("completedItems").textContent = String(completedItems);
-      document.getElementById("completedFlanges").textContent = String(completedFlanges);
-      document.getElementById("progressPct").textContent = `${progress}%`;
-      document.getElementById("deckCount").textContent = String(getUniqueValues("deck").length);
+      document.getElementById("unboltedItems").textContent = String(unboltedItems);
+      document.getElementById("unboltedProgressPct").textContent = `${unboltedProgress}%`;
+      document.getElementById("reboltedItems").textContent = String(reboltedItems);
+      document.getElementById("reboltedProgressPct").textContent = `${reboltedProgress}%`;
     }
 
     function renderDeckPrintCards() {
@@ -2903,13 +2929,14 @@
       }
       wrap.innerHTML = decks.map(deck => {
         const rows = app.rows.filter(row => row.deck === deck);
-        const completed = rows.filter(row => row.completed).length;
+        const unbolted = rows.filter(row => row.unbolted).length;
+        const rebolted = rows.filter(row => row.rebolted).length;
         const flanges = rows.reduce((sum, row) => sum + (Number(row.flangeAmount) || 0), 0);
         return `
           <div class="deck-card">
             <h3>${escapeHtml(deck)}</h3>
             <p>${rows.length} items • ${flanges} flanges</p>
-            <p>${completed} completed</p>
+            <p>Unbolted ${unbolted} • Rebolted ${rebolted}</p>
             <div class="actions" style="margin-top:10px;">
               <button class="secondary print-deck-btn" data-deck="${escapeHtml(deck)}">Print Deck</button>
             </div>
@@ -2931,7 +2958,8 @@
       document.getElementById("flangeAmountInput").value = row?.flangeAmount ?? 0;
       document.getElementById("flangeSizeInput").value = row?.flangeSize || "";
       document.getElementById("torqueInput").value = row?.torque || "";
-      document.getElementById("completedInput").value = row?.completed ? "true" : "false";
+      document.getElementById("unboltedInput").value = row?.unbolted ? "true" : "false";
+      document.getElementById("reboltedInput").value = row?.rebolted ? "true" : "false";
       document.getElementById("dialogTitle").textContent = row ? "Edit Item" : "Add Item";
       document.getElementById("deleteCurrentBtn").style.display = row ? "inline-block" : "none";
       document.getElementById("itemDialog").showModal();
@@ -2947,6 +2975,8 @@
       const id = document.getElementById("rowId").value || `row-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
       const deck = document.getElementById("deckInput").value.trim() || "Unknown";
       const deckSheetValue = document.getElementById("deckSheetInput").value.trim();
+      const rebolted = document.getElementById("reboltedInput").value === "true";
+      const unbolted = rebolted || document.getElementById("unboltedInput").value === "true";
       const row = {
         id,
         deck,
@@ -2955,7 +2985,8 @@
         flangeAmount: Number(document.getElementById("flangeAmountInput").value) || 0,
         flangeSize: document.getElementById("flangeSizeInput").value.trim(),
         torque: document.getElementById("torqueInput").value.trim(),
-        completed: document.getElementById("completedInput").value === "true"
+        unbolted,
+        rebolted
       };
       const index = app.rows.findIndex(item => item.id === id);
       if (index >= 0) app.rows[index] = row;
@@ -3109,7 +3140,13 @@
         if (!checkbox) return;
         const row = app.rows.find(item => item.id === checkbox.dataset.id);
         if (!row) return;
-        row.completed = checkbox.checked;
+        if (checkbox.classList.contains("unbolted-checkbox")) {
+          row.unbolted = checkbox.checked;
+          if (!row.unbolted) row.rebolted = false;
+        } else if (checkbox.classList.contains("rebolted-checkbox")) {
+          row.rebolted = checkbox.checked;
+          if (row.rebolted) row.unbolted = true;
+        }
         saveRows();
         applyFilters();
         renderDeckPrintCards();
