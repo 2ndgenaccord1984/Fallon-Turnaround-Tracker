@@ -6,5 +6,6 @@ window.FALLON_FIREBASE_CONFIG = {
   storageBucket: "turnaround-tracker-28e95.firebasestorage.app",
   messagingSenderId: "612118976397",
   appId: "1:612118976397:web:f83395c227bd47ca0b8fc4",
-  trackerPath: "fallonSafetyKleenTurnaroundTracker/sharedState"
+  trackerPath: "fallonSafetyKleenTurnaroundTracker/sharedState",
+  ownerEmail: ""
 };

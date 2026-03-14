@@ -419,8 +419,13 @@
           <span id="installStatus">Installable on supported phones/tablets/browsers</span>
         </div>
         <div class="admin-bar">
-          <div class="pill" id="adminStatus">Admin locked • edit/delete hidden</div>
+          <div>
+            <div class="pill" id="adminStatus">Admin locked • edit/delete hidden</div>
+            <div class="mini" id="ownerStatus" style="margin-top:8px;">Owner PIN control: local-only mode</div>
+          </div>
           <div class="actions">
+            <button id="ownerLoginBtn" class="secondary" style="width:auto;">Owner Sign In</button>
+            <button id="ownerLogoutBtn" class="secondary" style="width:auto; display:none;">Owner Sign Out</button>
             <button id="adminLoginBtn" class="secondary" style="width:auto;">Admin Login</button>
             <button id="changePinBtn" class="secondary admin-only hidden-admin" style="width:auto;">Change PIN</button>
             <button id="resetPinBtn" class="secondary admin-only hidden-admin" style="width:auto;">Reset PIN</button>
@@ -594,7 +599,8 @@
     //   storageBucket: "your-project.firebasestorage.app",
     //   messagingSenderId: "1234567890",
     //   appId: "1:1234567890:web:abcdef123456",
-    //   trackerPath: "fallonSafetyKleenTurnaroundTracker/sharedState"
+    //   trackerPath: "fallonSafetyKleenTurnaroundTracker/sharedState",
+    //   ownerEmail: "you@gmail.com"
     // };
     window.FALLON_FIREBASE_CONFIG = window.FALLON_FIREBASE_CONFIG || null;
   </script>
@@ -2410,6 +2416,15 @@
       currentUnit: DEFAULT_UNIT_NAME,
       deferredPrompt: null,
       isAdmin: false,
+      sharedAdminPin: null,
+      owner: {
+        auth: null,
+        signedIn: false,
+        email: null,
+        uid: null,
+        allowed: false,
+        provider: null
+      },
       cloud: {
         configured: Boolean(FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL),
         enabled: false,
@@ -2439,14 +2454,37 @@
       if (help && helpEl) helpEl.textContent = help;
     }
 
+    function getConfiguredOwnerEmail() {
+      return String(FIREBASE_CONFIG?.ownerEmail || '').trim().toLowerCase();
+    }
+
     function getStoredAdminPin() {
-      return localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
+      return app.sharedAdminPin || localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
     }
 
-    function setStoredAdminPin(pin) {
+    function setStoredAdminPin(pin, options = {}) {
+      app.sharedAdminPin = pin;
       localStorage.setItem(ADMIN_PIN_KEY, pin);
+      if (!options.skipCloudSave) queueCloudSave();
     }
 
+    function updateOwnerUi() {
+      const ownerStatus = document.getElementById('ownerStatus');
+      const ownerLoginBtn = document.getElementById('ownerLoginBtn');
+      const ownerLogoutBtn = document.getElementById('ownerLogoutBtn');
+      const ownerEmail = getConfiguredOwnerEmail();
+      let text = 'Owner PIN control: local-only mode';
+      if (app.cloud.configured && ownerEmail) {
+        text = app.owner.allowed
+          ? `Owner PIN control: signed in as ${app.owner.email}`
+          : `Owner PIN control: only ${ownerEmail} can change the shared PIN`;
+      } else if (app.cloud.configured) {
+        text = 'Owner PIN control: add ownerEmail in firebase-config.js to lock PIN changes to your Google account';
+      }
+      if (ownerStatus) ownerStatus.textContent = text;
+      if (ownerLoginBtn) ownerLoginBtn.style.display = (app.cloud.configured && !app.owner.allowed) ? 'inline-block' : 'none';
+      if (ownerLogoutBtn) ownerLogoutBtn.style.display = app.owner.signedIn ? 'inline-block' : 'none';
+    }
 
     function updateAdminUi() {
       document.querySelectorAll('.admin-only').forEach(el => {
@@ -2467,6 +2505,7 @@
       if (resetPinBtn) resetPinBtn.style.display = app.isAdmin ? 'inline-block' : 'none';
       const head = document.querySelector('.admin-actions-head');
       if (head) head.style.display = app.isAdmin ? '' : 'none';
+      updateOwnerUi();
     }
 
     function adminLogin() {
@@ -2482,9 +2521,19 @@
       }
     }
 
-    function changeAdminPin() {
+    function ownerCanManagePin() {
+      const ownerEmail = getConfiguredOwnerEmail();
+      if (!app.cloud.configured) return true;
+      return Boolean(ownerEmail && app.owner.allowed);
+    }
+
+    async function changeAdminPin() {
       if (!app.isAdmin) {
         alert('Admin login required.');
+        return;
+      }
+      if (!ownerCanManagePin()) {
+        alert(`Only the owner Google account (${getConfiguredOwnerEmail() || 'set ownerEmail in firebase-config.js first'}) can change the shared PIN.`);
         return;
       }
       const currentPin = prompt('Enter current admin PIN');
@@ -2506,7 +2555,8 @@
         return;
       }
       setStoredAdminPin(newPin);
-      alert('Admin PIN updated for this device/browser.');
+      setSaveStatus(`Shared admin PIN updated • ${stampNow()}`);
+      alert('Shared admin PIN updated for everyone using this site.');
     }
 
     function resetAdminPin() {
@@ -2514,9 +2564,46 @@
         alert('Admin login required.');
         return;
       }
-      if (!confirm('Reset the admin PIN back to the default PIN 1234 on this device/browser?')) return;
-      localStorage.removeItem(ADMIN_PIN_KEY);
-      alert('Admin PIN reset to default: 1234');
+      if (!ownerCanManagePin()) {
+        alert(`Only the owner Google account (${getConfiguredOwnerEmail() || 'set ownerEmail in firebase-config.js first'}) can reset the shared PIN.`);
+        return;
+      }
+      if (!confirm('Reset the shared admin PIN back to the default PIN 1234 for everyone using this site?')) return;
+      setStoredAdminPin(DEFAULT_ADMIN_PIN);
+      setSaveStatus(`Shared admin PIN reset • ${stampNow()}`);
+      alert('Shared admin PIN reset to default: 1234');
+    }
+
+    async function ownerLogin() {
+      if (!app.cloud.configured) {
+        alert('Cloud sync is not configured in this copy yet.');
+        return;
+      }
+      if (!getConfiguredOwnerEmail()) {
+        alert('Add ownerEmail to firebase-config.js first, then redeploy.');
+        return;
+      }
+      if (!app.owner.auth || !app.owner.provider) {
+        alert('Firebase Auth is still loading. Refresh once the page finishes connecting.');
+        return;
+      }
+      try {
+        const authMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+        await authMod.signInWithPopup(app.owner.auth, app.owner.provider);
+      } catch (error) {
+        console.warn('Owner sign-in failed', error);
+        alert('Owner sign-in failed. Make sure Google sign-in is enabled in Firebase Authentication and your Vercel domain is listed as an authorized domain.');
+      }
+    }
+
+    async function ownerLogout() {
+      if (!app.owner.auth) return;
+      try {
+        const authMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+        await authMod.signOut(app.owner.auth);
+      } catch (error) {
+        console.warn('Owner sign-out failed', error);
+      }
     }
 
     function adminLogout() {
@@ -2528,6 +2615,7 @@
 
     function loadAdminSession() {
       app.isAdmin = localStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+      app.sharedAdminPin = localStorage.getItem(ADMIN_PIN_KEY) || DEFAULT_ADMIN_PIN;
     }
 
     function normalizeSeed(rows) {
@@ -2618,8 +2706,12 @@
     function buildCloudPayload() {
       return {
         units: app.units,
+        settings: {
+          adminPin: getStoredAdminPin(),
+          ownerEmail: getConfiguredOwnerEmail() || null
+        },
         updatedAt: new Date().toISOString(),
-        updatedBy: "shared-web-app"
+        updatedBy: app.owner.email || "shared-web-app"
       };
     }
 
@@ -2689,6 +2781,11 @@
       const importedUnits = mergeUnitsWithDefaults(normalizeImportedUnits(payload?.units));
       if (!Object.keys(importedUnits).length) return;
       app.cloud.applyingRemote = true;
+      const remotePin = String(payload?.settings?.adminPin || '').trim();
+      if (remotePin) {
+        app.sharedAdminPin = remotePin;
+        localStorage.setItem(ADMIN_PIN_KEY, remotePin);
+      }
       app.units = importedUnits;
       if (!app.units[app.currentUnit]) {
         app.currentUnit = getUnitNames()[0] || DEFAULT_UNIT_NAME;
@@ -2708,9 +2805,10 @@
       }
       updateCloudStatus("connecting…", "Trying to connect to Firebase Realtime Database.");
       try {
-        const [{ initializeApp }, { getDatabase, ref, get, set, onValue }] = await Promise.all([
+        const [{ initializeApp }, { getDatabase, ref, get, set, onValue }, authMod] = await Promise.all([
           import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js")
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js"),
+          import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js")
         ]);
 
         const firebaseApp = initializeApp(FIREBASE_CONFIG);
@@ -2721,14 +2819,24 @@
         app.cloud.enabled = true;
         app.cloud.dataRef = dataRef;
         app.cloud.setFn = set;
+        app.owner.auth = authMod.getAuth(firebaseApp);
+        app.owner.provider = new authMod.GoogleAuthProvider();
+        app.owner.provider.setCustomParameters({ login_hint: getConfiguredOwnerEmail() || undefined });
+        authMod.onAuthStateChanged(app.owner.auth, user => {
+          app.owner.signedIn = Boolean(user);
+          app.owner.email = user?.email || null;
+          app.owner.uid = user?.uid || null;
+          app.owner.allowed = Boolean(user?.email && getConfiguredOwnerEmail() && user.email.toLowerCase() === getConfiguredOwnerEmail());
+          updateOwnerUi();
+        });
 
         const firstSnap = await get(dataRef);
         if (firstSnap.exists() && firstSnap.val()) {
           const remotePayload = firstSnap.val();
           applyRemoteState(remotePayload);
-          if (hasMissingDefaultUnits(remotePayload.units)) {
+          if (hasMissingDefaultUnits(remotePayload.units) || !remotePayload?.settings?.adminPin) {
             await set(dataRef, buildCloudPayload());
-            setSaveStatus(`Added uploaded units to shared cloud • ${stampNow()}`);
+            setSaveStatus(`Updated shared cloud settings • ${stampNow()}`);
           }
         } else {
           await set(dataRef, buildCloudPayload());
@@ -2742,7 +2850,7 @@
         });
 
         app.cloud.ready = true;
-        updateCloudStatus("live for everyone", "Any user opening this same deployed site will see shared updates, units, and checkmarks.");
+        updateCloudStatus("live for everyone", "Any user opening this same deployed site will see shared updates, units, checkmarks, and the same shared admin PIN.");
       } catch (error) {
         console.warn("Firebase sync setup failed", error);
         updateCloudStatus("setup failed", "Cloud sync is off. Check your Firebase config values, especially databaseURL.");
