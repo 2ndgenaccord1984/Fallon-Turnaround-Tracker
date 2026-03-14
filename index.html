@@ -183,7 +183,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1280px;
+      min-width: 1560px;
     }
     thead th {
       position: sticky;
@@ -457,6 +457,7 @@
       </div>
       <div class="controls">
         <input class="wide" id="searchInput" type="text" placeholder="Search equipment, size, torque, or deck..." />
+        <input id="crewInput" type="text" placeholder="Crew / initials for timestamps..." />
         <select id="deckFilter"></select>
         <select id="sizeFilter"></select>
         <select id="torqueFilter"></select>
@@ -466,7 +467,7 @@
         <button id="resetBtn" class="secondary">Reset</button>
       </div>
       <div class="toolbar-note">
-        Unbolted and Rebolted/Torqued checkmarks are always available. Add, edit, and delete stay hidden until an admin logs in. Rebolted/Torqued progress counts as completed work.
+        Enter your crew name or initials once, then each Unbolted and Rebolted / Torqued checkbox stamps who did it and when. Add, edit, and delete stay hidden until an admin logs in.
       </div>
     </div>
 
@@ -487,6 +488,8 @@
               <th>Flange Amount</th>
               <th>Flange Size</th>
               <th>Torque</th>
+              <th>Unbolted By / Time</th>
+              <th>Rebolted By / Time</th>
               <th class="no-print admin-actions-head admin-only hidden-admin">Actions</th>
             </tr>
           </thead>
@@ -519,7 +522,7 @@
             To share updates with everyone, paste your Firebase web config into the Firebase config section near the bottom of this file, or into firebase-config.js in the deploy package, then redeploy to Vercel.
           </div>
           <div class="mini" style="margin-top:10px;">
-            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, unbolted/rebolted checkmarks, added units, and edits for everyone using the same site. This version preloads SEQ, PESCO, and HT.
+            The active unit drop-down stays personal to each device. The shared cloud data syncs rows, unbolted/rebolted checkmarks, crew names, timestamps, added units, and edits for everyone using the same site. This version preloads SEQ, PESCO, and HT.
           </div>
         </div>
       </div>
@@ -2410,6 +2413,7 @@
     };
     const FIREBASE_CONFIG = window.FALLON_FIREBASE_CONFIG;
     const DEFAULT_TRACKER_PATH = "fallonSafetyKleenTurnaroundTracker/sharedState";
+    const CREW_NAME_KEY = "fallon-turnaround-tracker-crew-name-v1";
     const app = {
       rows: [],
       filteredRows: [],
@@ -2440,6 +2444,33 @@
     function stampNow() {
       const ts = new Date();
       return `${ts.toLocaleDateString()} ${ts.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    function formatStamp(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    function getCrewInputValue() {
+      return document.getElementById('crewInput')?.value.trim() || '';
+    }
+
+    function persistCrewValue(value) {
+      localStorage.setItem(CREW_NAME_KEY, value || '');
+      const input = document.getElementById('crewInput');
+      if (input && input.value !== (value || '')) input.value = value || '';
+    }
+
+    function requireCrewValue(actionLabel) {
+      let crew = getCrewInputValue();
+      if (!crew) {
+        crew = (prompt(`Enter crew name or initials for ${actionLabel}`) || '').trim();
+      }
+      if (!crew) return '';
+      persistCrewValue(crew);
+      return crew;
     }
 
     function setSaveStatus(message) {
@@ -2632,7 +2663,11 @@
           flangeSize: row.flangeSize || "",
           torque: row.torque || "",
           unbolted: Boolean(row.rebolted || row.completed || row.unbolted),
-          rebolted: Boolean(row.rebolted || row.completed)
+          rebolted: Boolean(row.rebolted || row.completed),
+          unboltedBy: row.unboltedBy || row.completedBy || "",
+          unboltedAt: row.unboltedAt || row.completedAt || "",
+          reboltedBy: row.reboltedBy || row.completedBy || "",
+          reboltedAt: row.reboltedAt || row.completedAt || ""
         };
       });
     }
@@ -2984,7 +3019,7 @@
     function renderTable() {
       const tbody = document.getElementById("resultsBody");
       if (!app.filteredRows.length) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:28px;">No rows match the current filters.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#94a3b8;padding:28px;">No rows match the current filters.</td></tr>`;
         return;
       }
 
@@ -3002,6 +3037,8 @@
           <td>${Number(row.flangeAmount) || 0}</td>
           <td>${escapeHtml(row.flangeSize)}</td>
           <td>${escapeHtml(row.torque)}</td>
+          <td><div>${escapeHtml(row.unboltedBy || '—')}</div><div class="mini">${escapeHtml(formatStamp(row.unboltedAt))}</div></td>
+          <td><div>${escapeHtml(row.reboltedBy || '—')}</div><div class="mini">${escapeHtml(formatStamp(row.reboltedAt))}</div></td>
           <td class="no-print" style="display:${app.isAdmin ? '' : 'none'};">
             <div class="actions">
               <button class="secondary edit-btn" data-id="${row.id}" style="width:auto;">Edit</button>
@@ -3086,6 +3123,8 @@
       const deckSheetValue = document.getElementById("deckSheetInput").value.trim();
       const rebolted = document.getElementById("reboltedInput").value === "true";
       const unbolted = rebolted || document.getElementById("unboltedInput").value === "true";
+      const index = app.rows.findIndex(item => item.id === id);
+      const existing = index >= 0 ? app.rows[index] : null;
       const row = {
         id,
         deck,
@@ -3095,9 +3134,12 @@
         flangeSize: document.getElementById("flangeSizeInput").value.trim(),
         torque: document.getElementById("torqueInput").value.trim(),
         unbolted,
-        rebolted
+        rebolted,
+        unboltedBy: existing?.unboltedBy || "",
+        unboltedAt: existing?.unboltedAt || "",
+        reboltedBy: existing?.reboltedBy || "",
+        reboltedAt: existing?.reboltedAt || ""
       };
-      const index = app.rows.findIndex(item => item.id === id);
       if (index >= 0) app.rows[index] = row;
       else app.rows.push(row);
 
@@ -3137,28 +3179,24 @@
         return;
       }
       if (!confirm(`Reset only the Unbolted and Rebolted / Torqued checkmarks for ${app.currentUnit}? The flange list and edits will stay in place.`)) return;
-      app.rows = app.rows.map(row => ({ ...row, unbolted: false, rebolted: false, completed: false }));
+      app.rows = app.rows.map(row => ({ ...row, unbolted: false, rebolted: false, completed: false, unboltedBy: "", unboltedAt: "", reboltedBy: "", reboltedAt: "" }));
       app.units[app.currentUnit] = app.rows;
       saveRows();
       fillFilters();
       resetFilters();
     }
 
-	function resetData() {
-
-	  if (!app.isAdmin) {
-         alert("Admin login required.");
-         return;
-		}
-
-	  if (!confirm(`Reset only the Unbolted and Rebolted / Torqued checkmarks for ${app.currentUnit}? The flange list and edits will stay in place.`)) return;
-
-	  app.rows = getDefaultRowsForUnit(app.currentUnit);
-	  app.units[app.currentUnit] = app.rows;
-
-	  saveRows();
-	  fillFilters();
-	  resetFilters();
+    function resetData() {
+      if (!app.isAdmin) {
+        alert("Admin login required.");
+        return;
+      }
+      if (!confirm(`Reset all edits and checkmarks for ${app.currentUnit} back to its original data?`)) return;
+      app.rows = getDefaultRowsForUnit(app.currentUnit);
+      app.units[app.currentUnit] = app.rows;
+      saveRows();
+      fillFilters();
+      resetFilters();
     }
 
     function exportBackup() {
@@ -3224,10 +3262,13 @@
         document.getElementById(id).addEventListener("change", applyFilters);
       });
 
+      document.getElementById("crewInput").addEventListener("change", event => persistCrewValue(event.target.value.trim()));
       document.getElementById("unitSelect").addEventListener("change", event => setCurrentUnit(event.target.value));
       document.getElementById("addUnitBtn").addEventListener("click", addUnit);
       document.getElementById("renameUnitBtn").addEventListener("click", renameCurrentUnit);
       document.getElementById("addBtn").addEventListener("click", () => openDialog());
+      document.getElementById("ownerLoginBtn").addEventListener("click", ownerLogin);
+      document.getElementById("ownerLogoutBtn").addEventListener("click", ownerLogout);
       document.getElementById("adminLoginBtn").addEventListener("click", adminLogin);
       document.getElementById("changePinBtn").addEventListener("click", changeAdminPin);
       document.getElementById("resetPinBtn").addEventListener("click", resetAdminPin);
@@ -3267,12 +3308,45 @@
         if (!checkbox) return;
         const row = app.rows.find(item => item.id === checkbox.dataset.id);
         if (!row) return;
+        const nowIso = new Date().toISOString();
         if (checkbox.classList.contains("unbolted-checkbox")) {
-          row.unbolted = checkbox.checked;
-          if (!row.unbolted) row.rebolted = false;
+          if (checkbox.checked) {
+            const crew = requireCrewValue('Unbolted');
+            if (!crew) {
+              checkbox.checked = false;
+              return;
+            }
+            row.unbolted = true;
+            row.unboltedBy = crew;
+            row.unboltedAt = nowIso;
+          } else {
+            row.unbolted = false;
+            row.unboltedBy = "";
+            row.unboltedAt = "";
+            row.rebolted = false;
+            row.reboltedBy = "";
+            row.reboltedAt = "";
+          }
         } else if (checkbox.classList.contains("rebolted-checkbox")) {
-          row.rebolted = checkbox.checked;
-          if (row.rebolted) row.unbolted = true;
+          if (checkbox.checked) {
+            const crew = requireCrewValue('Rebolted / Torqued');
+            if (!crew) {
+              checkbox.checked = false;
+              return;
+            }
+            row.rebolted = true;
+            row.reboltedBy = crew;
+            row.reboltedAt = nowIso;
+            if (!row.unbolted) {
+              row.unbolted = true;
+              row.unboltedBy = crew;
+              row.unboltedAt = nowIso;
+            }
+          } else {
+            row.rebolted = false;
+            row.reboltedBy = "";
+            row.reboltedAt = "";
+          }
         }
         saveRows();
         applyFilters();
@@ -3307,6 +3381,7 @@
       updateUnitUi();
       fillFilters();
       attachEvents();
+      persistCrewValue(localStorage.getItem(CREW_NAME_KEY) || "");
       updateAdminUi();
       applyFilters();
       registerServiceWorker();
