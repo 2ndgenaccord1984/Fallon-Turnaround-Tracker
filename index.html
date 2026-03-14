@@ -3144,17 +3144,21 @@
       resetFilters();
     }
 
-    function resetData() {
-      if (!app.isAdmin) {
-        alert("Admin login required.");
-        return;
-      }
-      if (!confirm(`Reset all edits and checkmarks for ${app.currentUnit} back to its original data?`)) return;
-      app.rows = getDefaultRowsForUnit(app.currentUnit);
-      app.units[app.currentUnit] = app.rows;
-      saveRows();
-      fillFilters();
-      resetFilters();
+	function resetData() {
+
+	  if (!app.isAdmin) {
+         alert("Admin login required.");
+         return;
+		}
+
+	  if (!confirm(`Reset only the Unbolted and Rebolted / Torqued checkmarks for ${app.currentUnit}? The flange list and edits will stay in place.`)) return;
+
+	  app.rows = getDefaultRowsForUnit(app.currentUnit);
+	  app.units[app.currentUnit] = app.rows;
+
+	  saveRows();
+	  fillFilters();
+	  resetFilters();
     }
 
     function exportBackup() {
